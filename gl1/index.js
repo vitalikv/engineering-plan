@@ -21,6 +21,8 @@ infProg.scene.planeMath = null;
 infProg.mouse = {};
 infProg.mouse.click = {};
 infProg.mouse.click.type = '';
+infProg.mouse.click.down = false;
+infProg.mouse.click.move = false;
 infProg.mouse.pos = new THREE.Vector2();
 
 
@@ -34,7 +36,15 @@ function render()
 
 function onWindowResize() 
 {
-	let aspect = container.clientWidth / container.clientHeight;
+	const canvas = renderer.domElement;
+	const width = canvas.clientWidth;
+	const height = canvas.clientHeight;
+	const needResize = canvas.width !== width || canvas.height !== height;
+	if (!needResize) { return; }
+	
+	renderer.setSize(width, height, false);
+	
+	let aspect = width / height;
 	let d = 5;
 	
 	camera2D.left = -d * aspect;
@@ -45,9 +55,7 @@ function onWindowResize()
 
 	 
 	camera3D.aspect = aspect;
-	camera3D.updateProjectionMatrix();
-	
-	renderer.setSize( container.clientWidth, container.clientHeight );
+	camera3D.updateProjectionMatrix();	
 	
 	renderer.domElement.style.width = '100%';
 	renderer.domElement.style.height = '100%';
@@ -57,7 +65,11 @@ function onWindowResize()
 }
 
 
+
+
+
 init();
+crCylinderGM();
 
 function init() 
 {
@@ -71,7 +83,7 @@ function init()
 
 	renderer = new THREE.WebGLRenderer( { antialias: false } );
 	renderer.setPixelRatio( window.devicePixelRatio );
-	renderer.setSize( container.clientWidth, container.clientHeight );
+	renderer.setSize( container.clientWidth, container.clientHeight, false );
 	renderer.outputEncoding = THREE.sRGBEncoding;
 	renderer.domElement.style.width = '100%';
 	renderer.domElement.style.height = '100%';
@@ -113,8 +125,7 @@ function init()
 	camera3D.userData.camera.click.pos = new THREE.Vector3();	
 	//----------- camera3D	
 	
-	
-	infProg.scene.camera = camera3D;
+
 	
 	infProg.scene.planeMath = createPlaneMath();
 	scene.add( new THREE.GridHelper( 10, 10 ) );
@@ -124,12 +135,34 @@ function init()
 	
 	initEvent();
 	actButton();
+	initLight();
+	clickButton({elem: infProg.el.butt.cam2D});
 	
 	render();	
 }
 
 
 
+function initLight()
+{
+	scene.add( new THREE.AmbientLight( 0xffffff, 0.5 ) ); 
+
+	let lights = [];
+	lights[ 0 ] = new THREE.PointLight( 0x222222, 0.7, 0 );
+	lights[ 1 ] = new THREE.PointLight( 0x222222, 0.5, 0 );
+	lights[ 2 ] = new THREE.PointLight( 0x222222, 0.8, 0 );
+	lights[ 3 ] = new THREE.PointLight( 0x222222, 0.2, 0 );
+
+	lights[ 0 ].position.set( -1000, 200, 1000 );
+	lights[ 1 ].position.set( -1000, 200, -1000 );
+	lights[ 2 ].position.set( 1000, 200, -1000 );
+	lights[ 3 ].position.set( 1000, 200, 1000 );
+
+	scene.add( lights[ 0 ] );
+	scene.add( lights[ 1 ] );
+	scene.add( lights[ 2 ] );
+	scene.add( lights[ 3 ] );	
+}
 
 
 

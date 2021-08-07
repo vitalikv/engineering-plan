@@ -3,16 +3,15 @@
 let long_click = false;
 let lastClickTime = 0;
 let catchTime = 0.30;
-let click = {};
-click.down = false;
-click.move = false;
+
+
 
 function onDocumentMouseDown( event ) 
 {
 	long_click = false;
 	lastClickTime = new Date().getTime();
-	click.down = true;
-	click.move = false;
+	infProg.mouse.click.down = true;
+	infProg.mouse.click.move = false;
 	
 	switch ( event.button ) 
 	{
@@ -62,9 +61,9 @@ function onDocumentMouseMove( event )
 	if (infProg.scene.camera == camera2D) { cameraMove2D( event ); }
 	else if (infProg.scene.camera == camera3D) { cameraMove3D( event ); }	
 	
-	if(click.down && !click.move)
+	if(infProg.mouse.click.down && !infProg.mouse.click.move)
 	{
-		click.move = true;
+		infProg.mouse.click.move = true;
 	}	
 	
 	render();
@@ -75,7 +74,7 @@ function onDocumentMouseUp( event )
 {	
 	infProg.mouse.click.type = '';
 	
-	if(!click.move) 
+	if(!infProg.mouse.click.move) 
 	{ 
 
 	}	
@@ -83,8 +82,8 @@ function onDocumentMouseUp( event )
 	
 	render();
 	
-	click.down = false;
-	click.move = false;		
+	infProg.mouse.click.down = false;
+	infProg.mouse.click.move = false;		
 }
 
 

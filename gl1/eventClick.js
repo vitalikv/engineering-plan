@@ -44,7 +44,11 @@ function actButton()
 	document.addEventListener("keyup", function (e) 
 	{ 
 		infProg.keys[e.keyCode] = false;		
-	});	
+	});
+
+	
+	let elPoint = document.querySelector('[nameId="point"]');
+	elPoint.onmousedown = function(){ clickButton({elem: this}); }
 }
 
 
