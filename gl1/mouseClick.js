@@ -32,7 +32,7 @@ function onDocumentMouseDown( event )
 	clickSetCamera3D( event, infProg.mouse.click.type );
 	
 	infProg.rayhit = null;	
-				
+	infProg.scene.selectO = null; 			
 	//var ray = rayIntersect( event, infProject.obj, 'one' );
 	
 	//if(ray.length > 0) { infProject.rayhit = ray[0]; }	
@@ -57,8 +57,10 @@ function onDocumentMouseMove( event )
 	
 	if ( !long_click ) { long_click = ( lastClickTime - new Date().getTime() < catchTime ) ? true : false; }
 	
+	let obj = infProg.scene.selectO;
 	
-	if (infProg.scene.camera == camera2D) { cameraMove2D( event ); }
+	if(obj) movePoint( event, obj )	
+	else if (infProg.scene.camera == camera2D) { cameraMove2D( event ); }
 	else if (infProg.scene.camera == camera3D) { cameraMove3D( event ); }	
 	
 	if(infProg.mouse.click.down && !infProg.mouse.click.move)

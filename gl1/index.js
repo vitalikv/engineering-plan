@@ -18,6 +18,18 @@ infProg.scene = {};
 infProg.scene.camera = null;
 infProg.scene.planeMath = null;
 
+infProg.scene.construction = {};
+infProg.scene.construction.wall = [];
+infProg.scene.construction.point = [];
+
+infProg.prefab = {};
+infProg.prefab.geom = {};
+infProg.prefab.mat = {};
+infProg.prefab.geom.p1 = crCylinderGeom();
+infProg.prefab.mat.p1 = new THREE.MeshPhongMaterial( {color: 0xcccccc, wireframe: false} );	
+
+infProg.scene.selectO = null;	
+
 infProg.mouse = {};
 infProg.mouse.click = {};
 infProg.mouse.click.type = '';
@@ -25,6 +37,8 @@ infProg.mouse.click.down = false;
 infProg.mouse.click.move = false;
 infProg.mouse.pos = new THREE.Vector2();
 
+infProg.settings = {};
+infProg.settings.id = 0;
 
 
 
@@ -69,7 +83,6 @@ function onWindowResize()
 
 
 init();
-crCylinderGM();
 
 function init() 
 {

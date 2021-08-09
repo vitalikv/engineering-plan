@@ -1,12 +1,8 @@
 
 
-function crCylinderGM(params)
+function crCylinderGeom(params)
 {	
-	const geometry = new THREE.CylinderGeometry( 0.2, 0.2, 0.1, 18 );
-	const material = new THREE.MeshPhongMaterial( {color: 0xffff00, wireframe: false} );
-	
-	const cylinder = new THREE.Mesh( geometry, material );
-	scene.add( cylinder );
+	let geometry = new THREE.CylinderGeometry( 0.2, 0.2, 0.2, 18 );
 	
 	let attrP = geometry.getAttribute('position');
 	
@@ -16,44 +12,67 @@ function crCylinderGM(params)
 		//attrP.array[i + 2] *= 0.5;
 		
 		let y = attrP.array[i + 1];
-		if(y < 0) { attrP.array[i + 1] = 0; console.log(i+1); }
+		if(y < 0) { attrP.array[i + 1] = 0; }
 	}
 		
-	cylinder.geometry.attributes.position.needsUpdate = true;
+	geometry.attributes.position.needsUpdate = true;
 	
-	console.log(attrP);
+	return geometry;
 }
 
 
 
-function crPoint( pos, id )
+function crPoint(params)
 {
-	var point = obj_point[obj_point.length] = new THREE.Mesh( infProject.tools.point.geometry, infProject.tools.point.material.clone() );
-	point.position.copy( pos );		
+	let id = params.id;
+	let pos = params.pos;
+	
+	let obj = new THREE.Mesh( infProg.prefab.geom.p1, infProg.prefab.mat.p1 );
+	obj.position.copy( pos );		
 
-	point.renderOrder = 1;
+	obj.renderOrder = 1;
 	
-	point.w = [];
-	point.p = [];
-	point.start = [];		
-	point.zone = [];
-	point.zoneP = [];
+	obj.w = [];
+	obj.p = [];
+	obj.start = [];		
+	obj.zone = [];
+	obj.zoneP = [];
 	
 	
-	if(id == 0) { id = countId; countId++; }	
-	point.userData.id = id;	
-	point.userData.tag = 'point';
-	point.userData.point = {};
-	point.userData.point.color = point.material.color.clone();
-	point.userData.point.cross = null;
-	point.userData.point.type = null;
-	point.userData.point.last = { pos : pos.clone(), cdm : '', cross : null };
+	if(!id) { id = infProg.settings.id; infProg.settings.id++; }	
+	obj.userData.id = id;	
+	obj.userData.tag = 'point';
+	obj.userData.point = {};
+	//obj.userData.point.color = point.material.color.clone();
+	obj.userData.point.cross = null;
+	obj.userData.point.type = null;
+	obj.userData.point.last = { pos : pos.clone(), cdm : '', cross : null };
 	
-	point.visible = (camera == cameraTop) ? true : false;	
+	//obj.visible = (camera == camera2D) ? true : false;	
 	
-	scene.add( point );	
+	scene.add( obj );	
 	
-	return point;
+	let arr = infProg.scene.construction.point;
+	
+	arr[arr.length] = obj;
+	
+	infProg.scene.selectO = obj;
+	
+	return obj;
+}
+
+
+
+function movePoint( event, obj )
+{	
+	let intersects = rayIntersect( event, infProg.scene.planeMath, 'one' ); 
+	
+	if(intersects.length == 0) return;
+	
+	let pos = new THREE.Vector3().addVectors( intersects[ 0 ].point, new THREE.Vector3() );				
+	pos.y = 0; 
+	
+	obj.position.copy( pos );	
 }
 
 
