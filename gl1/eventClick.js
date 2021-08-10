@@ -47,8 +47,7 @@ function actButton()
 	});
 
 	
-	let elPoint = document.querySelector('[nameId="point"]');
-	elPoint.onmousedown = function(){ crPoint({pos: new THREE.Vector3(0, 1, 2)}); }
+
 }
 
 

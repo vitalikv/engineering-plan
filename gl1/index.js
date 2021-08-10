@@ -28,7 +28,10 @@ infProg.prefab.mat = {};
 infProg.prefab.geom.p1 = crCylinderGeom();
 infProg.prefab.mat.p1 = new THREE.MeshPhongMaterial( {color: 0xcccccc, wireframe: false} );	
 
-infProg.scene.selectO = null;	
+infProg.act = {};
+infProg.act.selectO = null;
+infProg.act.rayhit = null;
+infProg.act.stopCam = false;
 
 infProg.mouse = {};
 infProg.mouse.click = {};
@@ -87,11 +90,9 @@ init();
 function init() 
 {
 	container = document.querySelector('[nameId="containerScene"]');	
-	infProg.el.canv = container;
 	
 	scene = new THREE.Scene();
-	scene.background = new THREE.Color( 0xffffff );
-	
+	scene.background = new THREE.Color( 0xffffff );	
 
 
 	renderer = new THREE.WebGLRenderer( { antialias: false } );
@@ -103,6 +104,7 @@ function init()
 	renderer.domElement.style.outline = 'none';		
 	container.appendChild( renderer.domElement );
 
+	infProg.el.canv = renderer.domElement;
 	
 	let aspect = container.clientWidth / container.clientHeight;
 	let d = 5;

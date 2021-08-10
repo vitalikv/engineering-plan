@@ -42,6 +42,7 @@
 
 <script src="js/three.min.js"></script>
 
+<script src="rayHit.js"></script>
 <script src="mathO.js"></script>
 <script src="mouseClick.js"></script>
 <script src="moveCamera.js"></script>
