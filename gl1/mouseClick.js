@@ -45,8 +45,8 @@ function onDocumentMouseDown( event )
 	if(infProg.mouse.click.type == 'right') { mouseDownRight( event ); return; } 	
 
 	 			
-	infProg.act.rayhit = clickRayHit({event: event});	
-	clickMouseActive({type: 'down'});	
+	//infProg.act.rayhit = clickRayHit({event: event});	
+	//clickMouseActive({type: 'down'});	
 	
 	render();
 }

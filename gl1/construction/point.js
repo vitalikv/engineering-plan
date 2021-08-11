@@ -1,7 +1,42 @@
 
 
-let elPoint = document.querySelector('[nameId="point"]');
-elPoint.onmouseup = function(){ testPromise_2().then(data=> { crPoint({pos: data.pos, cursor: true, tool: true}); }) }
+
+function initPoint()
+{
+	infProg.el.canv.addEventListener( 'mousedown', onPointMouseDown, false );
+	
+	let elPoint = document.querySelector('[nameId="point"]');
+	elPoint.onmouseup = function(){ testPromise_2().then(data=> { crPoint({pos: data.pos, cursor: true, tool: true}); }) }
+
+	
+	document.addEventListener("keydown", function (e) 
+	{ 
+		if(e.keyCode == 46) { deletePoint({active: true}); }
+	});	
+}
+
+
+
+function onPointMouseDown()
+{ 
+	selectPointOutLine({obj: null});
+	deActivePoint({arr: infProg.scene.construction.point});
+	
+	let rayhit = null;		
+	let arr = infProg.scene.construction;	
+	
+	if(infProg.scene.camera == camera2D)
+	{
+		let ray = rayIntersect( event, arr.point, 'arr' );
+		if(!rayhit) { if(ray.length > 0) { rayhit = ray[0]; } }		
+	}	
+
+	if(!rayhit) { return; }
+	
+	clickPointDown({obj: rayhit.object, rayPos: rayhit.point});	
+}
+
+
 
 
 function testPromise_2()
@@ -69,6 +104,7 @@ function crPoint(params)
 	if(!id) { id = infProg.settings.id; infProg.settings.id++; }	
 	obj.userData.id = id;	
 	obj.userData.tag = 'point';
+	obj.userData.active = false;
 	obj.userData.point = {};
 	
 	obj.userData.point.click = {};
@@ -106,7 +142,7 @@ function clickPointDown(params)
 	let rayPos = params.rayPos;	
 	let obj = params.obj;	
 
-
+		
 	obj.userData.point.click.offset = new THREE.Vector3().subVectors( obj.position, rayPos );
 	
 	infProg.scene.planeMath.position.set( 0, rayPos.y, 0 );
@@ -142,6 +178,9 @@ function clickPointDown(params)
 			infProg.el.canv.onmousemove = null; 
 			infProg.el.canv.onmouseup = null; 
 		}
+		
+		obj.userData.active = true;
+		selectPointOutLine({obj: obj});		
 	}
 	
 	infProg.el.canv.onmousemove = function(e){ clickPointMove({ event: e, obj: obj }); }
@@ -167,33 +206,77 @@ function clickPointMove(params)
 
 
 
-function clickPointUp(params)
-{
-	infProg.act.stopCam = false
-}
-
-
 function deletePoint(params)
 {
+	let active = params.active;
 	let obj = params.obj;
 	
-	deleteValueFromArrya({arr: infProg.scene.construction.point, obj: obj});
+	if(active)
+	{
+		let arr = infProg.scene.construction.point;
+		
+		for( let i = 0; i < arr.length; i++ )
+		{
+			if(arr[i].userData.active) { obj = arr[i]; break; }
+		}		
+	}
+	
+	if(!obj) return;
+	
+	deleteValueFromArrya({arr: infProg.scene.construction.point, obj: obj});	
+	 
+	function deleteValueFromArrya(params)
+	{
+		let arr = params.arr;
+		let obj = params.obj;
+		
+		console.log(arr.length);
+		for(let i = arr.length - 1; i > -1; i--) { if(arr[i] == obj) { arr.splice(i, 1); break; } }
+		console.log(arr.length);
+	}
+	
 	scene.remove( obj );
+	
+	render();
 }
 
 
-// удаление значения из массива 
-function deleteValueFromArrya(params)
+function deActivePoint(params)
 {
 	let arr = params.arr;
-	let obj = params.obj;
 	
-	console.log(arr.length);
-	for(let i = arr.length - 1; i > -1; i--) { if(arr[i] == obj) { arr.splice(i, 1); break; } }
-	console.log(arr.length);
+	for( let i = 0; i < arr.length; i++ )
+	{
+		arr[i].userData.active = false;
+	}
 }
 
 
+
+function selectPointOutLine(params)
+{
+	let obj = params.obj;
+	
+	
+	if(obj)
+	{
+		obj.material = infProg.prefab.mat.p1.clone();
+		obj.material.color = new THREE.Color( 0xff0000 );
+	}
+	else
+	{
+		let arr = infProg.scene.construction.point;
+		
+		for( let i = 0; i < arr.length; i++ )
+		{
+			if(arr[i].userData.active) 
+			{
+				arr[i].material.color = infProg.prefab.mat.p1.color.clone();
+			}
+		}			
+	}
+	
+}
 
 
 

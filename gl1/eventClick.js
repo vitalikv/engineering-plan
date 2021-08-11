@@ -46,8 +46,6 @@ function actButton()
 		infProg.keys[e.keyCode] = false;		
 	});
 
-	
-
 }
 
 

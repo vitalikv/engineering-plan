@@ -153,6 +153,8 @@ function init()
 	initLight();
 	clickButton({elem: infProg.el.butt.cam2D});
 	
+	initPoint();
+	
 	render();	
 }
 
