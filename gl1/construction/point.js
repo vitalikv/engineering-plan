@@ -114,12 +114,23 @@ function crPoint(params)
 	obj.userData.point.type = null;
 	obj.userData.point.last = { pos : obj.position.clone(), cdm : '', cross : null };
 	
-	//obj.visible = (camera == camera2D) ? true : false;	
+	obj.userData.point.arrP = [];
+	obj.userData.point.line = null;
 	
+	//obj.visible = (camera == camera2D) ? true : false;
+
+	if(params.arrP)
+	{
+		obj.userData.point.arrP = params.arrP;
+	}
+	
+	obj.userData.point.arrP.push(obj);
+	console.log(obj.userData.point.arrP);
 	scene.add( obj );	
 	
 	
-	if(!params.tool)
+	
+	if(!tool)
 	{
 		let arr = infProg.scene.construction.point;	
 		arr[arr.length] = obj;		
@@ -134,6 +145,37 @@ function crPoint(params)
 	
 	return obj;
 }
+
+
+
+function crUpLineForPoint(params)
+{
+	let obj = params.obj;
+	
+	if(obj.userData.point.arrP.length < 2) return;
+	
+	if(!obj.userData.point.line)
+	{
+		let arrV = obj.userData.point.arrP.map(o => o.position);
+		let geometry = new THREE.BufferGeometry().setFromPoints( arrV );
+		let material = new THREE.LineBasicMaterial({ color: 0x0000ff });
+
+		let line = new THREE.Line( geometry, material );
+		scene.add( line );	
+console.log('new')
+		obj.userData.point.line = line;
+	}
+	else
+	{
+		let line = obj.userData.point.line;
+		let arrV = obj.userData.point.arrP.map(o => o.position);
+		let geometry = new THREE.BufferGeometry().setFromPoints( arrV );		
+		line.geometry = geometry;
+console.log('update')		
+	}
+	
+}
+
 
 
 
@@ -167,7 +209,7 @@ function clickPointDown(params)
 				let arr = infProg.scene.construction.point;	
 				arr[arr.length] = obj;
 
-				crPoint({pos: obj.position.clone(), cursor: true, tool: true});				
+				crPoint({pos: obj.position.clone(), cursor: true, tool: true, arrP: obj.userData.point.arrP});				
 			}
 		}
 	}
@@ -201,7 +243,9 @@ function clickPointMove(params)
 	let pos = new THREE.Vector3().addVectors( intersects[ 0 ].point, obj.userData.point.click.offset );				
 	pos.y = 0; 
 	
-	obj.position.copy( pos );	
+	obj.position.copy( pos );
+
+	crUpLineForPoint({obj: obj});
 }
 
 
@@ -224,15 +268,14 @@ function deletePoint(params)
 	if(!obj) return;
 	
 	deleteValueFromArrya({arr: infProg.scene.construction.point, obj: obj});	
-	 
+	deleteValueFromArrya({arr: obj.userData.point.arrP, obj: obj});
+	
 	function deleteValueFromArrya(params)
 	{
 		let arr = params.arr;
 		let obj = params.obj;
-		
-		console.log(arr.length);
+				
 		for(let i = arr.length - 1; i > -1; i--) { if(arr[i] == obj) { arr.splice(i, 1); break; } }
-		console.log(arr.length);
 	}
 	
 	scene.remove( obj );
