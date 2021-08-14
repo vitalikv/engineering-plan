@@ -125,7 +125,7 @@ function crPoint(params)
 	}
 	
 	obj.userData.point.arrP.push(obj);
-	console.log(obj.userData.point.arrP);
+	
 	scene.add( obj );	
 	
 	
@@ -253,11 +253,7 @@ function updateLineGeomForPoint(params)
 	line.geometry = geometry;
 	
 	//line.geometry.verticesNeedUpdate = true; 
-	//line.geometry.elementsNeedUpdate = true;
-	
-console.log('update');		
-	
-	
+	//line.geometry.elementsNeedUpdate = true;	
 }
 
 
@@ -279,8 +275,10 @@ function deletePoint(params)
 	
 	if(!obj) return;
 	
+	let arrP = obj.userData.point.arrP;
+	
 	deleteValueFromArrya({arr: infProg.scene.construction.point, obj: obj});	
-	deleteValueFromArrya({arr: obj.userData.point.arrP, obj: obj});
+	deleteValueFromArrya({arr: arrP, obj: obj});
 	
 	function deleteValueFromArrya(params)
 	{
@@ -290,6 +288,22 @@ function deletePoint(params)
 		for(let i = arr.length - 1; i > -1; i--) { if(arr[i] == obj) { arr.splice(i, 1); break; } }
 	}
 	
+	
+	
+	if(arrP.length == 1)
+	{ 
+		scene.remove( arrP[0] );
+		deleteValueFromArrya({arr: infProg.scene.construction.point, obj: arrP[0]});
+		deleteValueFromArrya({arr: arrP, obj: arrP[0]});		
+	}
+	
+	if(arrP.length == 0)
+	{ 
+		scene.remove( obj.userData.point.line );
+	}	
+
+	updateLineGeomForPoint({obj: obj});
+		
 	scene.remove( obj );
 	
 	render();
