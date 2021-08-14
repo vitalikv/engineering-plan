@@ -129,6 +129,27 @@ function crPoint(params)
 	scene.add( obj );	
 	
 	
+	if(1 == 1)
+	{
+		let line = null;
+		
+		let ind = obj.userData.point.arrP.findIndex(o => o.userData.point.line);
+		
+		if(ind > -1)
+		{
+			line = obj.userData.point.arrP[ind].userData.point.line;
+		}
+		else
+		{
+			line = new THREE.Line( new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0x0000ff }) );
+			scene.add( line );						
+		}
+		
+		obj.userData.point.line = line;
+		
+		updateLineGeomForPoint({obj: obj});
+	}
+	
 	
 	if(!tool)
 	{
@@ -144,36 +165,6 @@ function crPoint(params)
 	render();
 	
 	return obj;
-}
-
-
-
-function crUpLineForPoint(params)
-{
-	let obj = params.obj;
-	
-	if(obj.userData.point.arrP.length < 2) return;
-	
-	if(!obj.userData.point.line)
-	{
-		let arrV = obj.userData.point.arrP.map(o => o.position);
-		let geometry = new THREE.BufferGeometry().setFromPoints( arrV );
-		let material = new THREE.LineBasicMaterial({ color: 0x0000ff });
-
-		let line = new THREE.Line( geometry, material );
-		scene.add( line );	
-console.log('new')
-		obj.userData.point.line = line;
-	}
-	else
-	{
-		let line = obj.userData.point.line;
-		let arrV = obj.userData.point.arrP.map(o => o.position);
-		let geometry = new THREE.BufferGeometry().setFromPoints( arrV );		
-		line.geometry = geometry;
-console.log('update')		
-	}
-	
 }
 
 
@@ -245,7 +236,28 @@ function clickPointMove(params)
 	
 	obj.position.copy( pos );
 
-	crUpLineForPoint({obj: obj});
+	updateLineGeomForPoint({obj: obj});
+}
+
+
+
+function updateLineGeomForPoint(params)
+{
+	let obj = params.obj;
+	
+	if(!obj.userData.point.line) return;	
+	
+	let line = obj.userData.point.line;
+	let arrV = obj.userData.point.arrP.map(o => o.position);
+	let geometry = new THREE.BufferGeometry().setFromPoints( arrV );		
+	line.geometry = geometry;
+	
+	//line.geometry.verticesNeedUpdate = true; 
+	//line.geometry.elementsNeedUpdate = true;
+	
+console.log('update');		
+	
+	
 }
 
 
