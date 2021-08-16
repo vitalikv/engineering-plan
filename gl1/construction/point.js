@@ -32,7 +32,7 @@ function onPointMouseDown()
 	}	
 
 	if(!rayhit) { return; }
-	
+	console.log(rayhit.object.userData.id, rayhit.object.userData.tag);
 	clickPointDown({obj: rayhit.object, rayPos: rayhit.point});	
 }
 
@@ -90,15 +90,9 @@ function crPoint(params)
 	
 	let obj = new THREE.Mesh( infProg.prefab.geom.p1, infProg.prefab.mat.p1 );
 	
-	if(pos) obj.position.copy( pos );		
+	if(pos) { obj.position.copy( pos );	}
 
 	obj.renderOrder = 1;
-	
-	obj.w = [];
-	obj.p = [];
-	obj.start = [];		
-	obj.zone = [];
-	obj.zoneP = [];
 	
 	
 	if(!id) { id = infProg.settings.id; infProg.settings.id++; }	
@@ -109,10 +103,6 @@ function crPoint(params)
 	
 	obj.userData.point.click = {};
 	obj.userData.point.click.offset = new THREE.Vector3();
-	//obj.userData.point.color = point.material.color.clone();
-	obj.userData.point.cross = null;
-	obj.userData.point.type = null;
-	obj.userData.point.last = { pos : obj.position.clone(), cdm : '', cross : null };
 	
 	obj.userData.point.arrP = [];
 	obj.userData.point.line = null;
@@ -346,6 +336,72 @@ function selectPointOutLine(params)
 	}
 	
 }
+
+
+
+
+function savePoint()
+{
+	let json = [];
+	
+	let arrP = infProg.scene.construction.point;
+	let arrL = [];
+	
+	for( let i = 0; i < arrP.length; i++ )
+	{
+		arrL[arrL.length] = arrP[i].userData.point.line;		
+	}
+	
+	arrL = [...new Set(arrL)];	// получаем только уникальные значения 
+
+	for( let i = 0; i < arrL.length; i++ )
+	{
+		json[i] = {};
+		json[i].line = {};  
+		json[i].point = [];
+		
+		let arrP_2 = arrP.filter(o => arrL[i] == o.userData.point.line);
+		
+		for( let i2 = 0; i2 < arrP_2.length; i2++ )
+		{
+			json[i].point[i2] = {};
+			json[i].point[i2].id = arrP_2[i2].userData.id;
+			json[i].point[i2].pos = arrP_2[i2].position;
+		}
+	}
+	
+	console.log(json);
+	
+	return json;
+}
+
+
+
+function loadPoint(params)
+{
+	let data = params.data;
+	
+	if(data.length == 0) return;
+	
+	for( let i = 0; i < data.length; i++ )
+	{
+		let arrP = data[i].point;
+		let pp = null;
+		
+		for( let i2 = 0; i2 < arrP.length; i2++ )
+		{
+			let pos = new THREE.Vector3(arrP[i2].pos.x, arrP[i2].pos.y, arrP[i2].pos.z);
+			
+			let o = crPoint({id: arrP[i2].id, pos: pos, arrP: pp});
+
+			pp = o.userData.point.arrP;
+		}		
+	}
+	
+	
+	
+}
+
 
 
 

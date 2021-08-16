@@ -6,6 +6,8 @@ let scene, camera2D, camera3D;
 
 let infProg = {};
 
+infProg.path = '';
+
 infProg.el = {};
 infProg.el.canv = null;
 infProg.el.butt = {};

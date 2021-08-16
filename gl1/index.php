@@ -22,6 +22,9 @@
 		<div class="flex_1" style="height: 100%;">
 			<div style="display: flex; flex-direction: column; width: 100%; height: 100%;">
 				<div class="flex_1" style="position: relative; height: 0; top: 0; left: 0; right: 0;">
+					<div class="button1 gradient_1" nameId="sv">save</div>
+					<div class="button1 gradient_1" nameId="ld">load</div>
+					
 					<div class="button1 gradient_1" nameId="point">point</div>
 					
 					<div class="flex_1" style="margin: 10px 10px auto auto;">
@@ -47,6 +50,8 @@
 <script src="mouseClick.js"></script>
 <script src="moveCamera.js"></script>
 <script src="changeCamera.js"></script>
+<script src="saveLoad/load.js"></script>
+<script src="saveLoad/save.js"></script>
 <script src="eventClick.js"></script>
 <script src="construction/point.js"></script>
 <script src="index.js"></script>
