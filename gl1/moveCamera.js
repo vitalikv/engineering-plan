@@ -176,37 +176,63 @@ function cameraZoom2D( delta )
 }
 
 
+
+
+
 function cameraZoom3D( delta, z )
 {
-	let vect = ( delta < 0 ) ? z : -z;
-
+	let movement = ( delta < 0 ) ? z : -z;
+	movement *= 1.2;
+	
 	let pos1 = camera3D.userData.camera.d3.targetO.position;
 	let pos2 = camera3D.position.clone();
+			
 	
-	let dir = new THREE.Vector3().subVectors( pos1, camera3D.position ).normalize();
-	dir = new THREE.Vector3().addScaledVector( dir, vect );
-	dir.addScalar( 0.001 );
-	let pos3 = new THREE.Vector3().addVectors( camera3D.position, dir );	
-
-
-	let qt = quaternionDirection( new THREE.Vector3().subVectors( pos1, camera3D.position ).normalize() );
-	let v1 = localTransformPoint( new THREE.Vector3().subVectors( pos1, pos3 ), qt );
-
-
-	let offset = new THREE.Vector3().subVectors( pos3, pos2 );
-	pos2 = new THREE.Vector3().addVectors( pos1, offset );
-
-	let centerCam_2 = pos1.clone();
+	let dir = camera3D.getWorldDirection(new THREE.Vector3());
+	let offset = new THREE.Vector3().addScaledVector( dir, movement );
 	
-	if ( delta < 0 ) { if ( pos2.y >= 0 ) { centerCam_2.copy( pos2 ); } }
+	pos1 = offsetTargetCam({posCenter: pos1, dir: dir, dist: 0.1});
+	offset = stopTargetCam({posCenter: pos1, posCam: pos2, offset: offset});
 	
-	if ( v1.z >= 0.05) 
-	{ 
-		camera3D.userData.camera.d3.targetO.position.copy(centerCam_2);
-		camera3D.position.copy( pos3 ); 	
-	}			
+	
+	// устанавливаем расстояние насколько близко можно приблизиться камерой к target
+	function offsetTargetCam(params)
+	{
+		let dir = params.dir;
+		let dist = params.dist;
+		let posCenter = params.posCenter;
+		
+		let dirInvers = new THREE.Vector3(-dir.x, -dir.y, -dir.z);		
+		let offset = new THREE.Vector3().addScaledVector( dirInvers, dist );
+		
+		let newPos = new THREE.Vector3().addVectors( posCenter, offset );
+		
+		return newPos;
+	}	
+	
+	
+	// запрещаем перемещение камеры за пределы центра/target
+	function stopTargetCam(params)
+	{	
+		let offset = params.offset;
+		let posCam = params.posCam;
+		let posCenter = params.posCenter;
+		
+		let newPos = new THREE.Vector3().addVectors( posCam, offset );
+		let dir2 = new THREE.Vector3().subVectors( posCenter, newPos ).normalize();		
+		
+		let dot = dir.dot(dir2);
+
+		if(dot < 0) 
+		{
+			offset = new THREE.Vector3().subVectors( posCenter, posCam )
+		}
+		
+		return offset;
+	}	
+
+	camera3D.position.add( offset );			
 }
-
 
 
 

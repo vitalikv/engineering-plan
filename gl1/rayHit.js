@@ -13,7 +13,7 @@ function clickMouseActive(params)
 	
 	if(params.type == 'down')
 	{  
-		if(tag == 'point') { clickPointDown({obj: obj, rayPos: rayhit.point}); }
+		if(tag == 'point') {  }
 	}
 	else if(params.type == 'up')
 	{	
