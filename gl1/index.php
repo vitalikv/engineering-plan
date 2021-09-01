@@ -48,8 +48,6 @@
 <script src="rayHit.js"></script>
 <script src="mathO.js"></script>
 <script src="mouseClick.js"></script>
-<script src="moveCamera.js"></script>
-<script src="changeCamera.js"></script>
 <script src="saveLoad/load.js"></script>
 <script src="saveLoad/save.js"></script>
 <script src="eventClick.js"></script>

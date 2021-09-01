@@ -17,7 +17,7 @@ function initPoint()
 
 
 
-function onPointMouseDown()
+function onPointMouseDown(event)
 { 
 	selectPointOutLine({obj: null});
 	deActivePoint({arr: infProg.scene.construction.point});
@@ -25,7 +25,7 @@ function onPointMouseDown()
 	let rayhit = null;		
 	let arr = infProg.scene.construction;	
 	
-	if(infProg.scene.camera == camera2D)
+	if(camOrbit.activeCam == camOrbit.cam2D)
 	{
 		let ray = rayIntersect( event, arr.point, 'arr' );
 		if(!rayhit) { if(ray.length > 0) { rayhit = ray[0]; } }		

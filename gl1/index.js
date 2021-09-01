@@ -53,39 +53,11 @@ function render()
 }
 
 
-function onWindowResize() 
-{
-	const canvas = renderer.domElement;
-	const width = canvas.clientWidth;
-	const height = canvas.clientHeight;
-	const needResize = canvas.width !== width || canvas.height !== height;
-	if (!needResize) { return; }
-	
-	renderer.setSize(width, height, false);
-	
-	let aspect = width / height;
-	let d = 5;
-	
-	camera2D.left = -d * aspect;
-	camera2D.right = d * aspect;
-	camera2D.top = d;
-	camera2D.bottom = -d;
-	camera2D.updateProjectionMatrix();
-
-	 
-	camera3D.aspect = aspect;
-	camera3D.updateProjectionMatrix();	
-	
-	renderer.domElement.style.width = '100%';
-	renderer.domElement.style.height = '100%';
-	
-	render();
-
-}
 
 
 
 
+let camOrbit;
 
 init();
 
@@ -108,52 +80,18 @@ function init()
 
 	infProg.el.canv = renderer.domElement;
 	
-	let aspect = container.clientWidth / container.clientHeight;
-	let d = 5;
-	
-	//----------- camera2D
-	camera2D = new THREE.OrthographicCamera( - d * aspect, d * aspect, d, - d, 1, 1000 );
-	camera2D.position.set(0, 10, 0);
-	camera2D.lookAt(scene.position);
-	camera2D.zoom = 1;
-	camera2D.updateMatrixWorld();
-	camera2D.updateProjectionMatrix();
-	camera2D.userData.camera = { save: { pos: camera2D.position.clone(), zoom: camera2D.zoom } };
-	//----------- camera2D
 
-
-	//----------- camera3D
-	camera3D = new THREE.PerspectiveCamera( 65, container.clientWidth / container.clientHeight, 0.01, 1000 );  
-	camera3D.rotation.order = 'YZX';		//'ZYX'
-	camera3D.position.set(5, 7, 5);	
-	camera3D.lookAt( new THREE.Vector3() );
-	
-	camera3D.userData.camera = {};
-	camera3D.userData.camera.save = {};
-	camera3D.userData.camera.save.pos = new THREE.Vector3();
-	camera3D.userData.camera.save.radius = 0;
-	
-	camera3D.userData.camera.movePos = null;
-
-	camera3D.userData.camera.d3 = { theta: 0, phi: 75 };
-	camera3D.userData.camera.d3.targetO = createCenterCamObj();	
-	camera3D.userData.camera.type = 'fly';
-	camera3D.userData.camera.click = {};
-	camera3D.userData.camera.click.pos = new THREE.Vector3();	
-	//----------- camera3D	
-	
-
-	
 	infProg.scene.planeMath = createPlaneMath();
+	
+
 	scene.add( new THREE.GridHelper( 10, 10 ) );
 	//scene.add( new THREE.AxesHelper( 10000 ) );
 	
-	startPosCamera3D({radious: 10, theta: 90, phi: 35});
 	
+	camOrbit = new CameraOrbit({container: infProg.el.canv, renderer: renderer, scene: scene, setCam: '2D'});
 	initEvent();
 	actButton();
 	initLight();
-	clickButton({elem: infProg.el.butt.cam2D});
 	
 	initPoint();
 	
