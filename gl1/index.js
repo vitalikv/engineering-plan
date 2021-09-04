@@ -30,17 +30,7 @@ infProg.prefab.mat = {};
 infProg.prefab.geom.p1 = crCylinderGeom();
 infProg.prefab.mat.p1 = new THREE.MeshPhongMaterial( {color: 0xcccccc, wireframe: false} );	
 
-infProg.act = {};
-infProg.act.selectO = null;
-infProg.act.rayhit = null;
-infProg.act.stopCam = false;
 
-infProg.mouse = {};
-infProg.mouse.click = {};
-infProg.mouse.click.type = '';
-infProg.mouse.click.down = false;
-infProg.mouse.click.move = false;
-infProg.mouse.pos = new THREE.Vector2();
 
 infProg.settings = {};
 infProg.settings.id = 0;

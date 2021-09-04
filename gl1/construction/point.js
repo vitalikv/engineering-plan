@@ -31,6 +31,8 @@ function onPointMouseDown(event)
 		if(!rayhit) { if(ray.length > 0) { rayhit = ray[0]; } }		
 	}	
 
+	render();
+	
 	if(!rayhit) { return; }
 	console.log(rayhit.object.userData.id, rayhit.object.userData.tag);
 	clickPointDown({obj: rayhit.object, rayPos: rayhit.point});	
@@ -171,7 +173,7 @@ function clickPointDown(params)
 	infProg.scene.planeMath.position.set( 0, rayPos.y, 0 );
 	infProg.scene.planeMath.rotation.set(-Math.PI/2, 0, 0);	
 
-	infProg.act.stopCam = true;
+	camOrbit.stopMove = true;
 	
 		
 	if(params.tool)
@@ -184,6 +186,8 @@ function clickPointDown(params)
 			if(e.button == 2)
 			{
 				deletePoint({obj: obj});
+				
+				camOrbit.stopMove = false;
 			}
 			else
 			{				
@@ -200,6 +204,8 @@ function clickPointDown(params)
 		{ 
 			infProg.el.canv.onmousemove = null; 
 			infProg.el.canv.onmouseup = null; 
+			
+			camOrbit.stopMove = false;
 		}
 		
 		obj.userData.active = true;
@@ -208,6 +214,7 @@ function clickPointDown(params)
 	
 	infProg.el.canv.onmousemove = function(e){ clickPointMove({ event: e, obj: obj }); }
 	
+	render();
 }
 
 
@@ -227,6 +234,8 @@ function clickPointMove(params)
 	obj.position.copy( pos );
 
 	updateLineGeomForPoint({obj: obj});
+	
+	render();
 }
 
 

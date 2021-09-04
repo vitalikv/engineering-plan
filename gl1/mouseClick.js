@@ -1,8 +1,6 @@
 
 
-let long_click = false;
-let lastClickTime = 0;
-let catchTime = 0.30;
+
 
 
 function changeCamera(params)
@@ -25,76 +23,6 @@ function changeCamera(params)
 }
 
 
-function mouseDownRight()
-{
-	
-	
-}
-
-
-
-
-function mouseDownCam( event ) 
-{
-	long_click = false;
-	lastClickTime = new Date().getTime();
-	infProg.mouse.click.down = true;
-	infProg.mouse.click.move = false;
-	
-	switch ( event.button ) 
-	{
-		case 0: infProg.mouse.click.type = 'left'; break;
-		case 1: infProg.mouse.click.type = 'right'; break;
-		case 2: infProg.mouse.click.type = 'right'; break;
-	}	
-	
-	if(event.changedTouches)
-	{
-		event.clientX = event.targetTouches[0].clientX;
-		event.clientY = event.targetTouches[0].clientY;
-		infProg.mouse.click.type = 'left';	
-	}
-
-	infProg.act.stopCam = false;
-	
-	clickSetCamera2D( camera2D, event, infProg.mouse.click.type );
-	clickSetCamera3D( camera3D, event, infProg.mouse.click.type );
-	
-	if(infProg.mouse.click.type == 'right') { mouseDownRight( event ); return; } 	
-
-	 			
-	//infProg.act.rayhit = clickRayHit({event: event});	
-	//clickMouseActive({type: 'down'});	
-	
-	render();
-}
-
-
-function mouseMoveCam( event ) 
-{ 
-	if(event.changedTouches)
-	{
-		event.clientX = event.targetTouches[0].clientX;
-		event.clientY = event.targetTouches[0].clientY;
-	}
-		
-	
-	if ( !long_click ) { long_click = ( lastClickTime - new Date().getTime() < catchTime ) ? true : false; }
-	
-	
-	if(infProg.act.stopCam) { }	
-	else if (infProg.scene.camera == camera2D) { cameraMove2D( camera2D, event, infProg.mouse.click.type ); }
-	else if (infProg.scene.camera == camera3D) { cameraMove3D( camera3D, event, infProg.mouse.click.type ); }	
-	
-	if(infProg.mouse.click.down && !infProg.mouse.click.move)
-	{
-		infProg.mouse.click.move = true;
-	}	
-	
-	render();
-}
-
-
 
 
 
@@ -106,9 +34,11 @@ class CameraOrbit
 		this.cam2D = this.initCam2D();
 		this.cam3D = this.initCam3D();
 		this.planeMath = this.initPlaneMath();
-		this.activeCam = this.cam2D;
+		this.activeCam = this.cam2D;		
 		
 		this.detectBrowser = this.detectBrowser();
+		
+		this.stopMove = false;
 		
 		this.mouse = {};
 		this.mouse.button = '';
@@ -210,6 +140,7 @@ class CameraOrbit
 
 	mouseDown(event)
 	{
+		if(this.stopMove) return;
 		this.mouse.down = true;
 		this.mouse.move = false;
 	
@@ -235,6 +166,7 @@ class CameraOrbit
 
 	mouseMove(event)
 	{
+		if(this.stopMove) return;
 		if(!this.mouse.down) return;		
 		
 		if(event.changedTouches)
