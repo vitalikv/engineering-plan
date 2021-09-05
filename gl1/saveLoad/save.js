@@ -6,11 +6,10 @@ async function saveF(params)
 	let json = {};
 	json.point = [];
 	
-	let arr = infProg.scene.construction;
 	
-	if(arr.point.length > 0)
+	if(pointClass)
 	{
-		json.point = savePoint();
+		json.point = pointClass.savePoint();
 	}
 	
 	

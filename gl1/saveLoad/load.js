@@ -22,7 +22,7 @@ async function loadF(params)
 
 		console.log(inf);
 		
-		if(inf.point) { loadPoint({data: inf.point}); }
+		if(inf.point && pointClass) { pointClass.loadPoint({data: inf.point}); }
 		
 		return true;
 	}		

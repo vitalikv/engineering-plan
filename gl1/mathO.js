@@ -1,20 +1,6 @@
 
 
 
-function createPlaneMath()
-{
-	let geometry = new THREE.PlaneGeometry( 10000, 10000 );
-	
-	let material = new THREE.MeshPhongMaterial( {color: 0xffff00, transparent: true, opacity: 0.5, side: THREE.DoubleSide } );
-	material.visible = false; 
-	let planeMath = new THREE.Mesh( geometry, material );
-	planeMath.rotation.set(-Math.PI/2, 0, 0);
-	planeMath.userData.tag = 'planeMath';	
-	scene.add( planeMath );	
-	
-	return planeMath;
-}
-
 
 
 

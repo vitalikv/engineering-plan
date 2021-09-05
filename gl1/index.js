@@ -20,15 +20,6 @@ infProg.scene = {};
 infProg.scene.camera = null;
 infProg.scene.planeMath = null;
 
-infProg.scene.construction = {};
-infProg.scene.construction.wall = [];
-infProg.scene.construction.point = [];
-
-infProg.prefab = {};
-infProg.prefab.geom = {};
-infProg.prefab.mat = {};
-infProg.prefab.geom.p1 = crCylinderGeom();
-infProg.prefab.mat.p1 = new THREE.MeshPhongMaterial( {color: 0xcccccc, wireframe: false} );	
 
 
 
@@ -47,7 +38,7 @@ function render()
 
 
 
-let camOrbit;
+let camOrbit, pointClass;
 
 init();
 
@@ -70,20 +61,21 @@ function init()
 
 	infProg.el.canv = renderer.domElement;
 	
-
-	infProg.scene.planeMath = createPlaneMath();
 	
 
 	scene.add( new THREE.GridHelper( 10, 10 ) );
 	//scene.add( new THREE.AxesHelper( 10000 ) );
 	
+	infProg.el.canv.addEventListener( 'contextmenu', function(event) { event.preventDefault() } );
+	
 	
 	camOrbit = new CameraOrbit({container: infProg.el.canv, renderer: renderer, scene: scene, setCam: '2D'});
-	initEvent();
-	actButton();
-	initLight();
 	
-	initPoint();
+	actButton();	
+	
+	pointClass = new Point({container: infProg.el.canv, renderer: renderer, scene: scene});
+	
+	initLight();
 	
 	render();	
 }

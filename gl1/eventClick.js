@@ -1,12 +1,6 @@
 
 
 
-function initEvent()
-{
-	
-	
-	infProg.el.canv.addEventListener( 'contextmenu', function(event) { event.preventDefault() } );
-}
 
 
 function actButton()

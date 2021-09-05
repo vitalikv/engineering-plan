@@ -45,13 +45,13 @@
 
 <script src="js/three.min.js"></script>
 
-<script src="rayHit.js"></script>
+
 <script src="mathO.js"></script>
-<script src="mouseClick.js"></script>
+<script src="camera.js"></script>
 <script src="saveLoad/load.js"></script>
 <script src="saveLoad/save.js"></script>
 <script src="eventClick.js"></script>
-<script src="construction/point.js"></script>
+<script src="point.js"></script>
 <script src="index.js"></script>
 
 </html>
