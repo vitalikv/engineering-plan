@@ -40,7 +40,7 @@ function render()
 
 let camOrbit, pointClass;
 
-init();
+
 
 function init() 
 {
@@ -105,7 +105,7 @@ function initLight()
 
 
 
-
+document.addEventListener("DOMContentLoaded", init);
 
 
 

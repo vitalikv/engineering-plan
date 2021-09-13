@@ -80,7 +80,7 @@ class CameraOrbit
 		let d = 5;
 		let camera2D = new THREE.OrthographicCamera( - d * aspect, d * aspect, d, - d, 1, 1000 );
 		camera2D.position.set(0, 10, 0);
-		camera2D.lookAt(scene.position);
+		camera2D.lookAt(this.params.scene.position);
 		camera2D.zoom = 1;
 		camera2D.updateMatrixWorld();
 		camera2D.updateProjectionMatrix();	
@@ -90,19 +90,21 @@ class CameraOrbit
 
 	initCam3D()
 	{
-		let camera3D = new THREE.PerspectiveCamera( 65, container.clientWidth / container.clientHeight, 0.01, 1000 );  
+		let camera3D = new THREE.PerspectiveCamera( 65, this.params.container.clientWidth / this.params.container.clientHeight, 0.01, 1000 );  
 		camera3D.rotation.order = 'YZX';		//'ZYX'
 		camera3D.position.set(5, 7, 5);	
 		camera3D.lookAt( new THREE.Vector3() );
 		
+		
 		camera3D.userData.camera = {};	
 		camera3D.userData.camera.d3 = { theta: 0, phi: 75 };
-		camera3D.userData.camera.d3.targetO = targetO();	
+		camera3D.userData.camera.d3.targetO = targetO(this.params.scene);	
 		camera3D.userData.camera.type = 'fly';
 		camera3D.userData.camera.click = {};
 		camera3D.userData.camera.click.pos = new THREE.Vector3();
 		
-		function targetO()
+		
+		function targetO(scene)
 		{
 			let material = new THREE.MeshPhongMaterial({ color: 0x0000ff, transparent: true, opacity: 1, depthTest: false });
 			let obj = new THREE.Mesh( new THREE.BoxGeometry(0.07, 0.07, 0.07), material );
@@ -123,7 +125,7 @@ class CameraOrbit
 		material.visible = false; 
 		let planeMath = new THREE.Mesh( geometry, material );
 		planeMath.rotation.set(-Math.PI/2, 0, 0);	
-		scene.add( planeMath );	
+		this.params.scene.add( planeMath );	
 		
 		return planeMath;
 	}	
@@ -183,7 +185,7 @@ class CameraOrbit
 		if (this.activeCam == this.cam2D) { this.moveCam2D( this.cam2D, event, this.mouse.button ); }
 		else if (this.activeCam == this.cam3D) { this.moveCam3D( this.cam3D, event, this.mouse.button ); }	
 	
-		console.log(event.clientX);
+		//console.log(event.clientX);
 		
 		this.render();
 	}
