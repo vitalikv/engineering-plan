@@ -25,7 +25,9 @@
 					<div class="button1 gradient_1" nameId="sv">save</div>
 					<div class="button1 gradient_1" nameId="ld">load</div>
 					
-					<div class="button1 gradient_1" nameId="point">point</div>
+					<div nameId="blockButton_1">
+						
+					</div>
 					
 					<div class="flex_1" style="margin: 10px 10px auto auto;">
 						<div class="button1 gradient_1" nameId="cam2D">2D</div>
@@ -52,6 +54,8 @@
 <script src="saveLoad/save.js"></script>
 <script src="eventClick.js"></script>
 <script src="point.js"></script>
+<script src="point_1.js"></script>
+<script src="testWall.js"></script>
 <script src="index.js"></script>
 
 </html>

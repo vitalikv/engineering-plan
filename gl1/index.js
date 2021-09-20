@@ -74,8 +74,11 @@ function init()
 	actButton();	
 	
 	pointClass = new Point({container: infProg.el.canv, renderer: renderer, scene: scene});
+	let pointClass_1 = new Point_1({container: infProg.el.canv, renderer: renderer, scene: scene});
 	
 	initLight();
+	
+	testWall();
 	
 	render();	
 }

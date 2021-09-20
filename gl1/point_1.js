@@ -1,7 +1,7 @@
 
 
 
-class Point
+class Point_1
 {
 	constructor(params)
 	{
@@ -29,7 +29,7 @@ class Point
 		
 		let el = document.querySelector('[nameId="blockButton_1"]');
 
-		let html = '<div class="button1 gradient_1" nameId="point">point 1</div>';					
+		let html = '<div class="button1 gradient_1" nameId="point">point 2</div>';					
 		let div = document.createElement('div');
 		div.innerHTML = html;
 		let elem = div.firstChild;
