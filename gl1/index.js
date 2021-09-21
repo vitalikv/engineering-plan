@@ -78,7 +78,9 @@ function init()
 	
 	initLight();
 	
-	testWall();
+	let tt = new wallCCC({});
+	tt.initTestWall();	
+	
 	
 	render();	
 }

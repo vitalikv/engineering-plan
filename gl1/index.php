@@ -47,6 +47,10 @@
 
 <script src="js/three.min.js"></script>
 
+<script src="js/csg/csg-lib.js"></script>
+<script src="js/csg/csg-worker.js"></script>
+<script src="js/csg/three-csg.js"></script>
+
 
 <script src="mathO.js"></script>
 <script src="camera.js"></script>
