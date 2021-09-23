@@ -20,23 +20,48 @@ class Point_2
 	initEvent()
 	{
 		let mouseDown = this.mouseDown.bind(this);
-		let deleteKeyPoint = this.deleteKeyPoint.bind(this);
-		let promise_1 = this.promise_1.bind(this);
-		let crPoint = this.crPoint.bind(this);
+		let deleteKeyPoint = this.deleteKeyPoint.bind(this);		
+		
 		
 		this.params.container.addEventListener( 'mousedown', mouseDown, false );
 		document.addEventListener( 'keydown', deleteKeyPoint, false);
 		
-		let el = document.querySelector('[nameId="blockButton_1"]');
-
-		let html = '<div class="button1 gradient_1" nameId="point">point 2</div>';					
-		let div = document.createElement('div');
-		div.innerHTML = html;
-		let elem = div.firstChild;
-			
-		el.append(elem);
+		if(1==1)
+		{
+			let crPoint = this.crPoint.bind(this);
+			let promise_1 = this.promise_1.bind(this);
+			let el = document.querySelector('[nameId="blockButton_1"]');
+			let html = '<div class="button1 gradient_1" nameId="point">point 2</div>';					
+			let div = document.createElement('div');
+			div.innerHTML = html;
+			let elem = div.firstChild;			
+			el.append(elem);		
+			elem.onmouseup = function(){ promise_1().then(data=> { crPoint({pos: data.pos, cursor: true, tool: true}); }) }			
+		}
 		
-		elem.onmouseup = function(){ promise_1().then(data=> { crPoint({pos: data.pos, cursor: true, tool: true}); }) }
+		if(1==1)
+		{
+			let saveFile = this.saveFile.bind(this);
+			let el = document.querySelector('[nameId="blockButton_save_1"]');
+			let html = '<div class="button1 gradient_1" nameId="sv">save 2</div>';					
+			let div = document.createElement('div');
+			div.innerHTML = html;
+			let elem = div.firstChild;			
+			el.append(elem);		
+			elem.onmousedown = function(){ saveFile({test: true, file: 'saveTest_2.json'}); }			
+		}
+
+		if(1==1)
+		{
+			let loadFile = this.loadFile.bind(this);
+			let el = document.querySelector('[nameId="blockButton_load_1"]');
+			let html = '<div class="button1 gradient_1" nameId="ld">load 2</div>';					
+			let div = document.createElement('div');
+			div.innerHTML = html;
+			let elem = div.firstChild;			
+			el.append(elem);		
+			elem.onmousedown = function(){ loadFile({test: true, file: 'saveTest_2.json'}); }			
+		}		
 	}
 	
 	
@@ -392,6 +417,38 @@ class Point_2
 	}
 	
 
+	async saveFile(params)
+	{
+		let file = params.file;
+
+		let json = {};
+		json.point = this.savePoint();		
+		let data = JSON.stringify( json );
+		
+		if(params.test)
+		{
+			// сохраняем в папку
+			let url = infProg.path+'saveLoad/savePhp.php';			
+			
+			let response = await fetch(url, 
+			{
+				method: 'POST',
+				body: 'myarray='+encodeURIComponent(data)+'&file='+file,
+				headers: 
+				{	
+					'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' 
+				},				
+			});
+			
+			let inf = await response.json();
+
+			console.log(inf);
+			
+			return true;
+		}		
+	}
+	
+	
 	savePoint()
 	{
 		let arrP = this.arrPoint;
@@ -430,6 +487,33 @@ class Point_2
 	}
 
 
+	async loadFile(params)
+	{
+		let file = params.file;
+		
+		if(params.test)
+		{
+			// сохраняем в папку
+			let url = infProg.path + 't/' + file;			
+			
+			let response = await fetch(url, 
+			{
+				method: 'GET',
+				headers: 
+				{	
+					'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' 
+				},				
+			});
+			
+			let inf = await response.json();
+
+			console.log(inf);
+			
+			if(inf.point) { this.loadPoint({data: inf.point}); }
+			
+			return true;
+		}		
+	}
 
 	loadPoint(params)
 	{

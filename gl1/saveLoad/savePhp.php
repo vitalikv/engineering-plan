@@ -4,11 +4,11 @@
 
 
 $array = $_POST['myarray']; 
-
+$file = $_POST['file'];
 
 
 // Открываем файл, флаг W означает - файл открыт на запись
-$f_hdl = fopen('../t/saveTest.json', 'w');
+$f_hdl = fopen('../t/'.$file, 'w');
 
 // Записываем в файл $text
 fwrite($f_hdl, $array);

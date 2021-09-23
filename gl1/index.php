@@ -21,11 +21,17 @@
 		
 		<div class="flex_1" style="height: 100%;">
 			<div style="display: flex; flex-direction: column; width: 100%; height: 100%;">
-				<div class="flex_1" style="position: relative; height: 0; top: 0; left: 0; right: 0;">
-					<div class="button1 gradient_1" nameId="sv">save</div>
-					<div class="button1 gradient_1" nameId="ld">load</div>
+				<div class="flex_1" style="position: relative; height: 0; top: 0; left: 0; right: 0;">		
 					
-					<div nameId="blockButton_1">
+					<div class="flex_column_1" style="margin: 10px auto auto auto;" nameId="blockButton_save_1">
+						
+					</div>
+					
+					<div class="flex_column_1" style="margin: 10px auto auto auto;" nameId="blockButton_load_1">
+						
+					</div>					
+					
+					<div class="flex_column_1" style="margin: 10px auto auto auto;" nameId="blockButton_1">
 						
 					</div>
 					

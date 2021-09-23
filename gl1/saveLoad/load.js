@@ -7,7 +7,7 @@ async function loadF(params)
 	if(params.test)
 	{
 		// сохраняем в папку
-		let url = infProg.path+'t/saveTest.json';			
+		let url = infProg.path + params.url;			
 		
 		let response = await fetch(url, 
 		{
@@ -22,7 +22,7 @@ async function loadF(params)
 
 		console.log(inf);
 		
-		if(inf.point && pointClass_1) { pointClass_1.loadPoint({data: inf.point}); }
+		if(inf.point && params.pointClass_1) { pointClass_1.loadPoint({data: inf.point}); }
 		//if(inf.point && pointClass_2) { pointClass_2.loadPoint({data: inf.point}); }
 		
 		return true;

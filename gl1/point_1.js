@@ -23,22 +23,47 @@ class Point_1
 	{
 		let mouseDown = this.mouseDown.bind(this);
 		let deleteKeyPoint = this.deleteKeyPoint.bind(this);
-		let promise_1 = this.promise_1.bind(this);
-		let crPoint = this.crPoint.bind(this);
 		
 		this.params.container.addEventListener( 'mousedown', mouseDown, false );
 		document.addEventListener( 'keydown', deleteKeyPoint, false);
 		
-		let el = document.querySelector('[nameId="blockButton_1"]');
 
-		let html = '<div class="button1 gradient_1" nameId="point">point 1</div>';					
-		let div = document.createElement('div');
-		div.innerHTML = html;
-		let elem = div.firstChild;
-			
-		el.append(elem);
-		
-		elem.onmouseup = function(){ promise_1().then(data=> { crPoint({pos: data.pos, cursor: true, tool: true}); }) }
+		if(1==1)
+		{
+			let promise_1 = this.promise_1.bind(this);
+			let crPoint = this.crPoint.bind(this);			
+			let el = document.querySelector('[nameId="blockButton_1"]');
+			let html = '<div class="button1 gradient_1" nameId="point">point 1</div>';					
+			let div = document.createElement('div');
+			div.innerHTML = html;
+			let elem = div.firstChild;			
+			el.append(elem);		
+			elem.onmouseup = function(){ promise_1().then(data=> { crPoint({pos: data.pos, cursor: true, tool: true}); }) }			
+		}
+
+		if(1==1)
+		{
+			let saveFile = this.saveFile.bind(this);
+			let el = document.querySelector('[nameId="blockButton_save_1"]');
+			let html = '<div class="button1 gradient_1" nameId="sv">save 1</div>';					
+			let div = document.createElement('div');
+			div.innerHTML = html;
+			let elem = div.firstChild;			
+			el.append(elem);		
+			elem.onmousedown = function(){ saveFile({test: true, file: 'saveTest_1.json'}); }			
+		}
+
+		if(1==1)
+		{
+			let loadFile = this.loadFile.bind(this);
+			let el = document.querySelector('[nameId="blockButton_load_1"]');
+			let html = '<div class="button1 gradient_1" nameId="ld">load 1</div>';					
+			let div = document.createElement('div');
+			div.innerHTML = html;
+			let elem = div.firstChild;			
+			el.append(elem);		
+			elem.onmousedown = function(){ loadFile({test: true, file: 'saveTest_1.json'}); }			
+		}	
 	}
 	
 	
@@ -154,33 +179,24 @@ class Point_1
 		{
 			obj.userData.point.arrP = params.arrP;
 		}
+
+		if(params.joinP)
+		{
+			obj.userData.point.joinP.push(params.joinP);
+			params.joinP.userData.point.joinP.push(obj);
+		}		
 		
 		obj.userData.point.arrP.push(obj);
 		
 		scene.add( obj );	
 		
 		
-		if(1==1)
-		{
-			let arrP = obj.userData.point.arrP;
-			
-			if(arrP.length > 1) 
-			{
-				let p = arrP[arrP.length - 2];
-				
-				obj.userData.point.joinP.push(p);									
-				p.userData.point.joinP.push(obj);
-			}
-		}
-		
-		
 		this.crWall({point: obj});
 		this.updateWall({obj: obj});
 		
 		if(!tool)
-		{
-			let arr = this.arrPoint;	
-			arr[arr.length] = obj;		
+		{	
+			this.arrPoint[this.arrPoint.length] = obj;		
 		}
 		
 		if(cursor) 
@@ -230,7 +246,7 @@ class Point_1
 				{					
 					arrPoint[arrPoint.length] = obj;
 
-					crPoint({pos: obj.position.clone(), cursor: true, tool: true, arrP: obj.userData.point.arrP});				
+					crPoint({pos: obj.position.clone(), cursor: true, tool: true, arrP: obj.userData.point.arrP, joinP: obj});				
 				}
 			}
 		}
@@ -468,6 +484,38 @@ class Point_1
 	}
 	
 
+	async saveFile(params)
+	{
+		let file = params.file;
+
+		let json = {};
+		json.point = this.savePoint();		
+		let data = JSON.stringify( json );
+		
+		if(params.test)
+		{
+			// сохраняем в папку
+			let url = infProg.path+'saveLoad/savePhp.php';			
+			
+			let response = await fetch(url, 
+			{
+				method: 'POST',
+				body: 'myarray='+encodeURIComponent(data)+'&file='+file,
+				headers: 
+				{	
+					'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' 
+				},				
+			});
+			
+			let inf = await response.json();
+
+			console.log(inf);
+			
+			return true;
+		}		
+	}
+
+
 	savePoint()
 	{
 		let arrP = this.arrPoint;
@@ -505,8 +553,36 @@ class Point_1
 		return json;
 	}
 
+	
+	
+	async loadFile(params)
+	{
+		let file = params.file;
+		
+		if(params.test)
+		{
+			// сохраняем в папку
+			let url = infProg.path + 't/' + file;			
+			
+			let response = await fetch(url, 
+			{
+				method: 'GET',
+				headers: 
+				{	
+					'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' 
+				},				
+			});
+			
+			let inf = await response.json();
 
-
+			console.log(inf);
+			
+			if(inf.point) { this.loadPoint({data: inf.point}); }
+			
+			return true;
+		}		
+	}
+	
 	loadPoint(params)
 	{
 		let data = params.data;
@@ -528,7 +604,6 @@ class Point_1
 			}		
 		}
 	}
-
 
 	rayIntersect( event, obj, t ) 
 	{		

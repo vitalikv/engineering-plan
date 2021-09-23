@@ -6,7 +6,9 @@ async function saveF(params)
 	let json = {};
 	json.point = [];
 	
-	if(pointClass_1) { json.point = pointClass_1.savePoint(); }
+	let file = 'saveTest';
+	
+	if(pointClass_1) { json.point = pointClass_1.savePoint(); file = 'saveTest_1'; }
 	//if(pointClass_2) { json.point = pointClass_2.savePoint(); }	
 	
 	let data = JSON.stringify( json );
@@ -19,7 +21,7 @@ async function saveF(params)
 		let response = await fetch(url, 
 		{
 			method: 'POST',
-			body: 'myarray='+encodeURIComponent(data),
+			body: 'myarray='+encodeURIComponent(data)+'&file='+file,
 			headers: 
 			{	
 				'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' 

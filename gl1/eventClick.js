@@ -29,13 +29,7 @@ function actButton()
 	{ 
 		infProg.keys[e.keyCode] = false;		
 	});
-	
-	
-	let elemSv = document.querySelector('[nameId="sv"]');				
-	elemSv.onmousedown = function(){ saveF({test: true}); }	 	
-
-	let elemLd = document.querySelector('[nameId="ld"]');				
-	elemLd.onmousedown = function(){ loadF({test: true}); }	 
+	 
 }
 
 
