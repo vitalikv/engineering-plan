@@ -57,8 +57,8 @@
 <script src="saveLoad/load.js"></script>
 <script src="saveLoad/save.js"></script>
 <script src="eventClick.js"></script>
-<script src="point.js"></script>
 <script src="point_1.js"></script>
+<script src="point_2.js"></script>
 <script src="testWall.js"></script>
 <script src="index.js"></script>
 

@@ -38,7 +38,8 @@ function render()
 
 
 
-let camOrbit, pointClass;
+let camOrbit;
+let pointClass_1, pointClass_2;
 
 
 
@@ -73,13 +74,13 @@ function init()
 	
 	actButton();	
 	
-	pointClass = new Point({container: infProg.el.canv, renderer: renderer, scene: scene});
-	let pointClass_1 = new Point_1({container: infProg.el.canv, renderer: renderer, scene: scene});
+	pointClass_1 = new Point_1({container: infProg.el.canv, renderer: renderer, scene: scene});
+	pointClass_2 = new Point_2({container: infProg.el.canv, renderer: renderer, scene: scene});
 	
 	initLight();
 	
-	let tt = new wallCCC({});
-	tt.initTestWall();	
+	//let tt = new wallCCC({});
+	//tt.initTestWall();	
 	
 	
 	render();	

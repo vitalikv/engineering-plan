@@ -1,7 +1,7 @@
 
 
 
-class Point
+class Point_2
 {
 	constructor(params)
 	{
@@ -29,7 +29,7 @@ class Point
 		
 		let el = document.querySelector('[nameId="blockButton_1"]');
 
-		let html = '<div class="button1 gradient_1" nameId="point">point 1</div>';					
+		let html = '<div class="button1 gradient_1" nameId="point">point 2</div>';					
 		let div = document.createElement('div');
 		div.innerHTML = html;
 		let elem = div.firstChild;
@@ -156,7 +156,7 @@ class Point
 		scene.add( obj );	
 		
 		
-		if(1 == 1)	// Line
+		if(1 == 1)
 		{
 			let line = null;
 			
@@ -178,9 +178,6 @@ class Point
 		}
 		
 		
-		this.crWall({point: obj});
-		
-		
 		if(!tool)
 		{
 			let arr = this.arrPoint;	
@@ -197,52 +194,6 @@ class Point
 		return obj;
 	}
 	
-	crWall(params)
-	{
-		let arrP = params.point.userData.point.arrP;	
-		if(arrP.length < 3) return;
-		
-		let point1 = arrP[arrP.length - 3];
-		let point2 = arrP[arrP.length - 2];
-		
-		
-		let dir = new THREE.Vector2(point1.position.z - point2.position.z, point1.position.x - point2.position.x).normalize();	// перпендикуляр
-		let width = 0.2;
-		let offsetL = new THREE.Vector2(dir.x * -width, dir.y * -width);
-		let offsetR = new THREE.Vector2(dir.x * width, dir.y * width);
-		
-		console.log(offsetR, offsetL);
-		
-		let arr = [];
-		
-		arr[arr.length] = new THREE.Vector2( point1.position.x, -point1.position.z).add(offsetR);
-		arr[arr.length] = new THREE.Vector2( point1.position.x, -point1.position.z + 0 );
-		arr[arr.length] = new THREE.Vector2( point1.position.x, -point1.position.z).add(offsetL);
-		arr[arr.length] = new THREE.Vector2( point2.position.x, -point2.position.z).add(offsetL);
-		arr[arr.length] = new THREE.Vector2( point2.position.x, -point2.position.z + 0 );
-		arr[arr.length] = new THREE.Vector2( point2.position.x, -point2.position.z).add(offsetR);
-
-	
-		function rotate(pos, angle)
-		{
-			let vec2 = new THREE.Vector2();
-			vec2.x = pos.x * Math.cos(Math.PI/2) - pos.y * Math.sin(angle);
-			vec2.y = pos.x * Math.sin(angle) + pos.y * Math.cos(angle);
-			return vec2;
-		}		
-		
-		let shape = new THREE.Shape( arr );
-		let geometry = new THREE.ExtrudeGeometry( shape, { bevelEnabled: false, depth: 3 } );
-		geometry.rotateX(-Math.PI/2);
-		
-		let material = new THREE.MeshPhongMaterial( {color: 0xcccccc, wireframe: false} );
-		
-		let obj = new THREE.Mesh( geometry, material );	
-		
-		scene.add( obj );
-		
-		return obj;
-	}
 	
 	selectPoint(params)
 	{
@@ -334,7 +285,9 @@ class Point
 		
 		let line = obj.userData.point.line;
 		let arrV = obj.userData.point.arrP.map(o => o.position);
-		let geometry = new THREE.BufferGeometry().setFromPoints( arrV );		
+		let geometry = new THREE.BufferGeometry().setFromPoints( arrV );
+		
+		line.geometry.dispose();		
 		line.geometry = geometry;
 		
 		//line.geometry.verticesNeedUpdate = true; 
@@ -418,6 +371,7 @@ class Point
 		
 		if(arrP.length == 0)
 		{ 
+			obj.userData.point.line.geometry.dispose();
 			scene.remove( obj.userData.point.line );
 		}	
 

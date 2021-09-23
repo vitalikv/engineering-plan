@@ -6,12 +6,8 @@ async function saveF(params)
 	let json = {};
 	json.point = [];
 	
-	
-	if(pointClass)
-	{
-		json.point = pointClass.savePoint();
-	}
-	
+	if(pointClass_1) { json.point = pointClass_1.savePoint(); }
+	//if(pointClass_2) { json.point = pointClass_2.savePoint(); }	
 	
 	let data = JSON.stringify( json );
 	

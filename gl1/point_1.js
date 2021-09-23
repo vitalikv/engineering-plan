@@ -8,8 +8,10 @@ class Point_1
 		this.params = params;
 		this.planeMath = this.initPlaneMath();
 		this.geometry_1 = this.cylinderGeometry();
-		this.m_default = new THREE.MeshPhongMaterial( {color: 0x00ff00, wireframe: false} );
-		this.m_active = new THREE.MeshPhongMaterial( {color: 0xff0000, wireframe: false} );		
+		this.m_p_default = new THREE.MeshPhongMaterial( {color: 0x222222, depthTest: false, transparent: true, wireframe: false} );
+		this.m_active = new THREE.MeshPhongMaterial( {color: 0xff0000, wireframe: false} );	
+
+		this.m_w_default = new THREE.MeshPhongMaterial( {color: 0xcccccc, wireframe: false} );
 		
 		this.arrPoint = [];
 		
@@ -29,7 +31,7 @@ class Point_1
 		
 		let el = document.querySelector('[nameId="blockButton_1"]');
 
-		let html = '<div class="button1 gradient_1" nameId="point">point 2</div>';					
+		let html = '<div class="button1 gradient_1" nameId="point">point 1</div>';					
 		let div = document.createElement('div');
 		div.innerHTML = html;
 		let elem = div.firstChild;
@@ -113,7 +115,7 @@ class Point_1
 		render();
 		
 		if(!rayhit) { return; }
-		console.log(rayhit.object.userData.id, rayhit.object.userData.tag);
+		console.log(rayhit.object.userData.id, rayhit.object.userData.tag, rayhit.object.userData.point.joinP, rayhit.object.userData.point.joinW);
 		this.selectPoint({obj: rayhit.object, rayPos: rayhit.point});	
 	}
 	
@@ -125,7 +127,7 @@ class Point_1
 		let cursor = params.cursor;
 		let tool = params.tool;
 		
-		let obj = new THREE.Mesh( this.geometry_1, this.m_default );
+		let obj = new THREE.Mesh( this.geometry_1, this.m_p_default );
 		
 		if(pos) { obj.position.copy( pos );	}
 
@@ -143,6 +145,8 @@ class Point_1
 		
 		obj.userData.point.arrP = [];
 		obj.userData.point.line = null;
+		obj.userData.point.joinP = [];
+		obj.userData.point.joinW = [];
 		
 		//obj.visible = (camera == camera2D) ? true : false;
 
@@ -156,27 +160,22 @@ class Point_1
 		scene.add( obj );	
 		
 		
-		if(1 == 1)
+		if(1==1)
 		{
-			let line = null;
+			let arrP = obj.userData.point.arrP;
 			
-			let ind = obj.userData.point.arrP.findIndex(o => o.userData.point.line);
-			
-			if(ind > -1)
+			if(arrP.length > 1) 
 			{
-				line = obj.userData.point.arrP[ind].userData.point.line;
+				let p = arrP[arrP.length - 2];
+				
+				obj.userData.point.joinP.push(p);									
+				p.userData.point.joinP.push(obj);
 			}
-			else
-			{
-				line = new THREE.Line( new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0x0000ff }) );
-				scene.add( line );						
-			}
-			
-			obj.userData.point.line = line;
-			
-			this.updateLineGeomForPoint({obj: obj});
 		}
 		
+		
+		this.crWall({point: obj});
+		this.updateWall({obj: obj});
 		
 		if(!tool)
 		{
@@ -271,27 +270,96 @@ class Point_1
 		
 		obj.position.copy( pos );
 
-		this.updateLineGeomForPoint({obj: obj});
+		this.updateWall({obj: obj});
 		
 		render();
 	}
 
 
-	updateLineGeomForPoint(params)
+	crWall(params)
+	{
+		let id = params.id;
+		
+		let arrP = params.point.userData.point.arrP;	
+		if(arrP.length < 2) return;
+		
+		let point1 = arrP[arrP.length - 2];
+		let point2 = params.point;
+			
+		
+		let obj = new THREE.Mesh( new THREE.BufferGeometry(), this.m_w_default );	
+
+		if(!id) { id = infProg.settings.id; infProg.settings.id++; }	
+		obj.userData.id = id;	
+		obj.userData.active = false;		
+		
+		obj.userData.click = {};
+		obj.userData.click.offset = new THREE.Vector3();
+		
+		obj.userData.w = {};
+		obj.userData.w.joinP = [point1, point2];
+
+		
+		scene.add( obj );
+		
+		point1.userData.point.joinW.push(obj);
+		point2.userData.point.joinW.push(obj);  console.log(point1.userData.id, point1.userData.point.joinW, point2.userData.id, point2.userData.point.joinW);
+		
+		return obj;
+	}
+	
+
+	updateWall(params)
 	{
 		let obj = params.obj;
 		
-		if(!obj.userData.point.line) return;	
+		if(obj.userData.point.joinW.length == 0) return;	
 		
-		let line = obj.userData.point.line;
-		let arrV = obj.userData.point.arrP.map(o => o.position);
-		let geometry = new THREE.BufferGeometry().setFromPoints( arrV );		
-		line.geometry = geometry;
+		let arrW = obj.userData.point.joinW;
+		
+		for( let i = 0; i < arrW.length; i++ )
+		{
+			let geometry = this.updateGeomWall({p1: arrW[i].userData.w.joinP[0], p2: arrW[i].userData.w.joinP[1]});
+			arrW[i].geometry.dispose();
+			arrW[i].geometry = geometry;
+		}
+		
 		
 		//line.geometry.verticesNeedUpdate = true; 
 		//line.geometry.elementsNeedUpdate = true;	
 	}
 
+
+	updateGeomWall(params)
+	{
+		let p1 = params.p1;
+		let p2 = params.p2;
+		
+		
+		let dir = new THREE.Vector2(p1.position.z - p2.position.z, p1.position.x - p2.position.x).normalize();	// перпендикуляр
+		let width = 0.02;
+		let offsetL = new THREE.Vector2(dir.x * -width, dir.y * -width);
+		let offsetR = new THREE.Vector2(dir.x * width, dir.y * width);
+		
+		let arr = [];
+		
+		arr[arr.length] = new THREE.Vector2( p1.position.x, -p1.position.z).add(offsetR);
+		arr[arr.length] = new THREE.Vector2( p1.position.x, -p1.position.z + 0 );
+		arr[arr.length] = new THREE.Vector2( p1.position.x, -p1.position.z).add(offsetL);
+		arr[arr.length] = new THREE.Vector2( p2.position.x, -p2.position.z).add(offsetL);
+		arr[arr.length] = new THREE.Vector2( p2.position.x, -p2.position.z + 0 );
+		arr[arr.length] = new THREE.Vector2( p2.position.x, -p2.position.z).add(offsetR);
+
+		
+		
+		let shape = new THREE.Shape( arr );
+		let geometry = new THREE.ExtrudeGeometry( shape, { bevelEnabled: false, depth: 3 } );
+		geometry.rotateX(-Math.PI/2);
+
+		return geometry;
+	}
+	
+	
 
 	deActivePoint(params)
 	{
@@ -322,7 +390,7 @@ class Point_1
 			{
 				if(arr[i].userData.active) 
 				{
-					arr[i].material = this.m_default;
+					arr[i].material = this.m_p_default;
 				}
 			}			
 		}
@@ -356,9 +424,26 @@ class Point_1
 		
 		let arrP = obj.userData.point.arrP;
 		
+		for( let i = 0; i < arrP.length; i++ )
+		{
+			this.deleteValueFromArrya({arr: arrP[i].userData.point.joinP, obj: obj});				
+		}
+
+		for( let i = 0; i < arrP.length; i++ )
+		{
+			let arrW = obj.userData.point.joinW;
+			
+			for( let i2 = 0; i2 < arrW.length; i2++ )
+			{
+				this.deleteValueFromArrya({arr: arrP[i].userData.point.joinW, obj: arrW[i2]});
+				scene.remove( arrW[i2] );
+			}						
+		}		
+		
 		this.deleteValueFromArrya({arr: this.arrPoint, obj: obj});	
 		this.deleteValueFromArrya({arr: arrP, obj: obj});
-
+		
+		
 
 		if(arrP.length == 1)
 		{ 
@@ -366,13 +451,7 @@ class Point_1
 			this.deleteValueFromArrya({arr: this.arrPoint, obj: arrP[0]});
 			this.deleteValueFromArrya({arr: arrP, obj: arrP[0]});		
 		}
-		
-		if(arrP.length == 0)
-		{ 
-			scene.remove( obj.userData.point.line );
-		}	
-
-		this.updateLineGeomForPoint({obj: obj});
+			
 			
 		scene.remove( obj );
 		
