@@ -14,6 +14,9 @@ class Point_1
 		this.m_w_default = new THREE.MeshPhongMaterial( {color: 0xcccccc, wireframe: false} );
 		
 		this.arrPoint = [];
+		this.countId = {};
+		this.countId.p = 0;
+		this.countId.w = 0;
 		
 		this.initEvent();	
 	}
@@ -162,7 +165,7 @@ class Point_1
 		obj.renderOrder = 1;
 		
 		
-		if(!id) { id = infProg.settings.id; infProg.settings.id++; }	
+		if(id == undefined) { id = this.countId.p; this.countId.p++; }	
 		obj.userData.id = id;	
 		obj.userData.tag = 'point';
 		obj.userData.active = false;
@@ -306,8 +309,8 @@ class Point_1
 		
 		let obj = new THREE.Mesh( new THREE.BufferGeometry(), this.m_w_default );	
 
-		//if(!id) { id = infProg.settings.id; infProg.settings.id++; }	
-		//obj.userData.id = id;	
+		if(id == undefined) { id = this.countId.w; this.countId.w++; }	
+		obj.userData.id = id;	
 		obj.userData.active = false;		
 		
 		obj.userData.click = {};
@@ -428,6 +431,7 @@ class Point_1
 	{
 		let active = params.active;
 		let obj = params.obj;
+		let reset = (params.reset) ? true : false;
 		
 		if(active)
 		{
@@ -444,6 +448,8 @@ class Point_1
 		let p = obj.userData.point.joinP;
 		let w = obj.userData.point.joinW;
 		
+		if(p.length > 2 && !reset) return;
+		
 		for( let i = 0; i < p.length; i++ )
 		{			
 			this.deleteValueFromArrya({arr: p[i].userData.point.joinP, obj: obj});
@@ -451,6 +457,7 @@ class Point_1
 			for( let i2 = 0; i2 < w.length; i2++ )
 			{
 				this.deleteValueFromArrya({arr: p[i].userData.point.joinW, obj: w[i2]});
+				w[i2].geometry.dispose();
 				scene.remove( w[i2] );				
 			}
 		}
@@ -458,6 +465,13 @@ class Point_1
 		obj.userData.point.joinP = [];
 		obj.userData.point.joinW = [];
 		
+		if(p.length == 2 && !reset)
+		{
+			p[0].userData.point.joinP.push(p[1]);
+			p[1].userData.point.joinP.push(p[0]);
+
+			this.crWall({p1: p[0], p2: p[1]});			
+		}
 		
 		let arr = [...p, obj];  
 		
@@ -482,6 +496,19 @@ class Point_1
 		for(let i = arr.length - 1; i > -1; i--) { if(arr[i] == obj) { arr.splice(i, 1); break; } }
 	}
 	
+	
+	resetScene()
+	{
+		let arr = this.arrPoint;
+		
+		for( let i = arr.length - 1; i >= 0; i-- )
+		{
+			this.deletePoint({obj: arr[i], reset: true});
+		}
+	
+		this.countId.p = 0;
+		this.arrPoint = [];
+	}
 
 	async saveFile(params)
 	{
@@ -566,6 +593,8 @@ class Point_1
 	
 	loadPoint(params)
 	{
+		this.resetScene();
+		
 		let json = params.json;
 		
 		for( let i = 0; i < json.point.length; i++ )
@@ -578,6 +607,11 @@ class Point_1
 			
 			let o = this.crPoint({id: point.id, pos: pos, joinP: joinP});		
 		}
+		
+		let arrId = json.point.map(o => o.id);
+		let maxId = Math.max(...arrId);
+		
+		this.countId.p = maxId + 1;  
 	}
 	
 	

@@ -109,7 +109,12 @@ function initLight()
 	scene.add( lights[ 3 ] );	
 }
 
-
+function getConsoleRendererInfo()
+{	
+	//console.log(renderer.info.programs);
+	//console.log(renderer.info.render);
+	console.log(renderer.info.memory);	
+}
 
 document.addEventListener("DOMContentLoaded", init);
 
