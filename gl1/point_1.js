@@ -140,7 +140,10 @@ class Point_1
 		render();
 		
 		if(!rayhit) { return; }
-		console.log(rayhit.object.userData.id, rayhit.object.userData.tag, rayhit.object.userData.point.joinP, rayhit.object.userData.point.joinW);
+		
+		let joinP = rayhit.object.userData.point.joinP.map(o => o.userData.id)
+		console.log(rayhit.object.userData.id, rayhit.object.userData.tag, joinP, rayhit.object.userData.point.joinW);
+
 		this.selectPoint({obj: rayhit.object, rayPos: rayhit.point});	
 	}
 	
@@ -168,31 +171,32 @@ class Point_1
 		obj.userData.point.click = {};
 		obj.userData.point.click.offset = new THREE.Vector3();
 		
-		obj.userData.point.arrP = [];
-		obj.userData.point.line = null;
 		obj.userData.point.joinP = [];
 		obj.userData.point.joinW = [];
 		
 		//obj.visible = (camera == camera2D) ? true : false;
 
-		if(params.arrP)
-		{
-			obj.userData.point.arrP = params.arrP;
-		}
 
 		if(params.joinP)
-		{
-			obj.userData.point.joinP.push(params.joinP);
-			params.joinP.userData.point.joinP.push(obj);
+		{ 
+			let arr = params.joinP;
+			
+			for ( let i = 0; i < arr.length; i++ )
+			{ 
+				if(!arr[i]) continue;
+				
+				obj.userData.point.joinP.push(arr[i]);
+				arr[i].userData.point.joinP.push(obj);
+
+				this.crWall({p1: obj, p2: arr[i]});
+			}	
 		}		
-		
-		obj.userData.point.arrP.push(obj);
 		
 		scene.add( obj );	
 		
 		
-		this.crWall({point: obj});
-		this.updateWall({obj: obj});
+		
+		
 		
 		if(!tool)
 		{	
@@ -246,7 +250,7 @@ class Point_1
 				{					
 					arrPoint[arrPoint.length] = obj;
 
-					crPoint({pos: obj.position.clone(), cursor: true, tool: true, arrP: obj.userData.point.arrP, joinP: obj});				
+					crPoint({pos: obj.position.clone(), cursor: true, tool: true, joinP: [obj]});				
 				}
 			}
 		}
@@ -294,34 +298,33 @@ class Point_1
 
 	crWall(params)
 	{
-		let id = params.id;
+		let id = params.id;		
 		
-		let arrP = params.point.userData.point.arrP;	
-		if(arrP.length < 2) return;
-		
-		let point1 = arrP[arrP.length - 2];
-		let point2 = params.point;
+		let p1 = params.p1;
+		let p2 = params.p2;
 			
 		
 		let obj = new THREE.Mesh( new THREE.BufferGeometry(), this.m_w_default );	
 
-		if(!id) { id = infProg.settings.id; infProg.settings.id++; }	
-		obj.userData.id = id;	
+		//if(!id) { id = infProg.settings.id; infProg.settings.id++; }	
+		//obj.userData.id = id;	
 		obj.userData.active = false;		
 		
 		obj.userData.click = {};
 		obj.userData.click.offset = new THREE.Vector3();
 		
 		obj.userData.w = {};
-		obj.userData.w.joinP = [point1, point2];
+		obj.userData.w.joinP = [p1, p2];
 
 		
 		scene.add( obj );
 		
-		point1.userData.point.joinW.push(obj);
-		point2.userData.point.joinW.push(obj);  console.log(point1.userData.id, point1.userData.point.joinW, point2.userData.id, point2.userData.point.joinW);
+		p1.userData.point.joinW.push(obj);
+		p2.userData.point.joinW.push(obj);  
 		
-		return obj;
+		console.log('crWall', p1.userData.id, p2.userData.id, p1.userData.point.joinW, p2.userData.point.joinW);
+		
+		this.updateWall({obj: p1});
 	}
 	
 
@@ -438,38 +441,34 @@ class Point_1
 		
 		if(!obj) return;
 		
-		let arrP = obj.userData.point.arrP;
+		let p = obj.userData.point.joinP;
+		let w = obj.userData.point.joinW;
 		
-		for( let i = 0; i < arrP.length; i++ )
-		{
-			this.deleteValueFromArrya({arr: arrP[i].userData.point.joinP, obj: obj});				
-		}
+		for( let i = 0; i < p.length; i++ )
+		{			
+			this.deleteValueFromArrya({arr: p[i].userData.point.joinP, obj: obj});
 
-		for( let i = 0; i < arrP.length; i++ )
-		{
-			let arrW = obj.userData.point.joinW;
-			
-			for( let i2 = 0; i2 < arrW.length; i2++ )
+			for( let i2 = 0; i2 < w.length; i2++ )
 			{
-				this.deleteValueFromArrya({arr: arrP[i].userData.point.joinW, obj: arrW[i2]});
-				scene.remove( arrW[i2] );
-			}						
-		}		
-		
-		this.deleteValueFromArrya({arr: this.arrPoint, obj: obj});	
-		this.deleteValueFromArrya({arr: arrP, obj: obj});
-		
-		
-
-		if(arrP.length == 1)
-		{ 
-			scene.remove( arrP[0] );
-			this.deleteValueFromArrya({arr: this.arrPoint, obj: arrP[0]});
-			this.deleteValueFromArrya({arr: arrP, obj: arrP[0]});		
+				this.deleteValueFromArrya({arr: p[i].userData.point.joinW, obj: w[i2]});
+				scene.remove( w[i2] );				
+			}
 		}
+		
+		obj.userData.point.joinP = [];
+		obj.userData.point.joinW = [];
+		
+		
+		let arr = [...p, obj];  
+		
+		for( let i = 0; i < arr.length; i++ )
+		{
+			if(arr[i].userData.point.joinP.length > 0) continue;
 			
-			
-		scene.remove( obj );
+			this.deleteValueFromArrya({arr: this.arrPoint, obj: arr[i]});
+			scene.remove( arr[i] );
+		}			
+		
 		
 		render();
 	}
@@ -488,8 +487,8 @@ class Point_1
 	{
 		let file = params.file;
 
-		let json = {};
-		json.point = this.savePoint();		
+		
+		let json = this.savePoint();		
 		let data = JSON.stringify( json );
 		
 		if(params.test)
@@ -518,37 +517,19 @@ class Point_1
 
 	savePoint()
 	{
-		let arrP = this.arrPoint;
+		let arrP = this.arrPoint;		
 		
-		if(arrP.length == 0) return [];
-		
-		let json = [];
-		let arrL = [];
+		let json = {};
+		json.point = [];
 		
 		for( let i = 0; i < arrP.length; i++ )
-		{
-			arrL[arrL.length] = arrP[i].userData.point.line;		
-		}
-		
-		arrL = [...new Set(arrL)];	// получаем только уникальные значения 
-
-		for( let i = 0; i < arrL.length; i++ )
-		{
-			json[i] = {};
-			json[i].line = {};  
-			json[i].point = [];
+		{ 
+			json.point[i] = {};
+			json.point[i].id = arrP[i].userData.id;
+			json.point[i].pos = arrP[i].position;
 			
-			let arrP_2 = arrP.filter(o => arrL[i] == o.userData.point.line);
-			
-			for( let i2 = 0; i2 < arrP_2.length; i2++ )
-			{
-				json[i].point[i2] = {};
-				json[i].point[i2].id = arrP_2[i2].userData.id;
-				json[i].point[i2].pos = arrP_2[i2].position;
-			}
+			json.point[i].joinP = arrP[i].userData.point.joinP.map(o => o.userData.id);		
 		}
-		
-		console.log(json);
 		
 		return json;
 	}
@@ -577,7 +558,7 @@ class Point_1
 
 			console.log(inf);
 			
-			if(inf.point) { this.loadPoint({data: inf.point}); }
+			this.loadPoint({json: inf});
 			
 			return true;
 		}		
@@ -585,25 +566,33 @@ class Point_1
 	
 	loadPoint(params)
 	{
-		let data = params.data;
+		let json = params.json;
 		
-		if(data.length == 0) return;
-		
-		for( let i = 0; i < data.length; i++ )
+		for( let i = 0; i < json.point.length; i++ )
 		{
-			let arrP = data[i].point;
-			let pp = null;
+			let point = json.point[i];			
 			
-			for( let i2 = 0; i2 < arrP.length; i2++ )
-			{
-				let pos = new THREE.Vector3(arrP[i2].pos.x, arrP[i2].pos.y, arrP[i2].pos.z);
-				
-				let o = this.crPoint({id: arrP[i2].id, pos: pos, arrP: pp});
-
-				pp = o.userData.point.arrP;
-			}		
+			let pos = new THREE.Vector3(point.pos.x, point.pos.y, point.pos.z);
+			
+			let joinP = point.joinP.map(id => { return this.findObj({arr: this.arrPoint, id: id}); })			
+			
+			let o = this.crPoint({id: point.id, pos: pos, joinP: joinP});		
 		}
 	}
+	
+	
+	findObj(params)
+	{
+		let id = params.id;
+		let arr = params.arr;
+		
+		for ( let i = 0; i < arr.length; i++ )
+		{ 
+			if(arr[i].userData.id == id){ return arr[i]; } 
+		}	
+		
+		return null;
+	}	
 
 	rayIntersect( event, obj, t ) 
 	{		
