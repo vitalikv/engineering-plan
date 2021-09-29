@@ -18,54 +18,51 @@ class Point_1
 		this.countId.p = 0;
 		this.countId.w = 0;
 		
+		this.actTool = false;
+		
 		this.initEvent();	
 	}
 	
 
 	initEvent()
 	{
-		let mouseDown = this.mouseDown.bind(this);
-		let deleteKeyPoint = this.deleteKeyPoint.bind(this);
 		
-		this.params.container.addEventListener( 'mousedown', mouseDown, false );
-		document.addEventListener( 'keydown', deleteKeyPoint, false);
+		this.params.container.addEventListener( 'mousedown', (event) => {this.clickScene(event)} );
+		
+		document.addEventListener( 'keydown', (event) => {this.deleteKeyPoint(event)} );
 		
 
 		if(1==1)
-		{
-			let promise_1 = this.promise_1.bind(this);
-			let crPoint = this.crPoint.bind(this);			
+		{		
 			let el = document.querySelector('[nameId="blockButton_1"]');
 			let html = '<div class="button1 gradient_1" nameId="point">point 1</div>';					
 			let div = document.createElement('div');
 			div.innerHTML = html;
 			let elem = div.firstChild;			
 			el.append(elem);		
-			elem.onmouseup = function(){ promise_1().then(data=> { crPoint({pos: data.pos, cursor: true, tool: true}); }) }			
+			elem.onmouseup =()=> { this.promise_1().then(data=> { this.crPoint({pos: data.pos, cursor: true, tool: true}); }) }			
 		}
 
 		if(1==1)
 		{
-			let saveFile = this.saveFile.bind(this);
 			let el = document.querySelector('[nameId="blockButton_save_1"]');
 			let html = '<div class="button1 gradient_1" nameId="sv">save 1</div>';					
 			let div = document.createElement('div');
 			div.innerHTML = html;
 			let elem = div.firstChild;			
 			el.append(elem);		
-			elem.onmousedown = function(){ saveFile({test: true, file: 'saveTest_1.json'}); }			
+			elem.onmousedown =()=> { this.saveFile({test: true, file: 'saveTest_1.json'}); }			
 		}
 
 		if(1==1)
 		{
-			let loadFile = this.loadFile.bind(this);
 			let el = document.querySelector('[nameId="blockButton_load_1"]');
 			let html = '<div class="button1 gradient_1" nameId="ld">load 1</div>';					
 			let div = document.createElement('div');
 			div.innerHTML = html;
 			let elem = div.firstChild;			
 			el.append(elem);		
-			elem.onmousedown = function(){ loadFile({test: true, file: 'saveTest_1.json'}); }			
+			elem.onmousedown =()=> { this.loadFile({test: true, file: 'saveTest_1.json'}); }			
 		}	
 	}
 	
@@ -109,7 +106,10 @@ class Point_1
 	{
 		let container = this.params.container;
 		let rayIntersect = this.rayIntersect.bind(this);
+		
 		let planeMath = this.planeMath;
+		planeMath.position.set( 0, 0, 0 );
+		planeMath.rotation.set(-Math.PI/2, 0, 0);
 		
 		return new Promise((resolve, reject) => 
 		{
@@ -127,14 +127,18 @@ class Point_1
 		});
 	}	
 	
-	mouseDown(event)
+	// кликнули куда-то в сцену
+	clickScene(event)
 	{ 
+		if(camOrbit.activeCam != camOrbit.cam2D) return;
+		if(this.actTool) return;
+		
 		this.activePoint({obj: null});
 		this.deActivePoint({arr: this.arrPoint});
 		
 		let rayhit = null;		
 		
-		if(camOrbit.activeCam == camOrbit.cam2D)
+		if(1 == 1)
 		{
 			let ray = this.rayIntersect( event, this.arrPoint, 'arr' );
 			if(!rayhit) { if(ray.length > 0) { rayhit = ray[0]; } }		
@@ -145,9 +149,9 @@ class Point_1
 		if(!rayhit) { return; }
 		
 		let joinP = rayhit.object.userData.point.joinP.map(o => o.userData.id)
-		console.log(rayhit.object.userData.id, rayhit.object.userData.tag, joinP, rayhit.object.userData.point.joinW);
+		console.log('clickScene', rayhit.object.userData.id, rayhit.object.userData.tag, joinP, rayhit.object.userData.point.joinW);
 
-		this.selectPoint({obj: rayhit.object, rayPos: rayhit.point});	
+		this.addEventPoint({obj: rayhit.object, rayPos: rayhit.point});	
 	}
 	
 
@@ -208,7 +212,7 @@ class Point_1
 		
 		if(cursor) 
 		{
-			this.selectPoint({obj: obj, rayPos: obj.position, tool: tool});	
+			this.addEventPoint({obj: obj, rayPos: obj.position, tool: tool});	
 		}
 		
 		render();
@@ -217,7 +221,8 @@ class Point_1
 	}
 	
 	
-	selectPoint(params)
+	// добавляем события выбранной точке/tool
+	addEventPoint(params)
 	{
 		let rayPos = params.rayPos;	
 		let obj = params.obj;	
@@ -234,32 +239,31 @@ class Point_1
 		
 		if(params.tool)
 		{
-			let crPoint = this.crPoint.bind(this);
-			let deletePoint = this.deletePoint.bind(this);
-			let arrPoint = this.arrPoint;
+			this.actTool = true;			
 			
-			container.onmousedown = function(e)
+			container.onmousedown =(e)=>
 			{ 
 				container.onmousemove = null; 
 				container.onmousedown = null;  
-			
+				this.actTool = false; 
+				
 				if(e.button == 2)
 				{
-					deletePoint({obj: obj});
+					this.deletePoint({obj: obj});
 					
 					camOrbit.stopMove = false;
 				}
 				else
 				{					
-					arrPoint[arrPoint.length] = obj;
+					this.arrPoint[this.arrPoint.length] = obj;
 
-					crPoint({pos: obj.position.clone(), cursor: true, tool: true, joinP: [obj]});				
+					this.crPoint({pos: obj.position.clone(), cursor: true, tool: true, joinP: [obj]});				
 				}
 			}
 		}
 		else
 		{
-			container.onmouseup = function()
+			container.onmouseup =()=>
 			{ 
 				container.onmousemove = null; 
 				container.onmouseup = null; 
@@ -271,9 +275,7 @@ class Point_1
 			this.activePoint({obj: obj});		
 		}
 		
-		let pointMove = this.pointMove.bind(this);
-		
-		container.onmousemove = function(e){ pointMove({ event: e, obj: obj }); }
+		container.onmousemove =(e)=> { this.pointMove({ event: e, obj: obj }); }
 		
 		render();
 	}
@@ -292,12 +294,36 @@ class Point_1
 		pos.y = 0; 
 		
 		obj.position.copy( pos );
-
+		
+		pos = this.nearPoint({obj: obj});
+		obj.position.copy( pos );
+		
 		this.updateWall({obj: obj});
 		
 		render();
 	}
 
+	nearPoint(params)
+	{
+		let obj = params.obj;
+		
+		let pos = obj.position.clone(); 
+		let arr = this.arrPoint;
+		
+		for ( let i = 0; i < arr.length; i++ )
+		{
+			if(arr[i] == obj) { continue; }		 
+			
+			if(pos.distanceTo( arr[i].position ) < 0.2 / camOrbit.cam2D.zoom) 
+			{ 
+				pos = arr[i].position.clone();
+				//obj.userData.point.cross = point = obj_point[i];
+				break;
+			}	
+		}
+
+		return pos;
+	}
 
 	crWall(params)
 	{
