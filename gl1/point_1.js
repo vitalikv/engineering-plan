@@ -254,10 +254,8 @@ class Point_1
 					camOrbit.stopMove = false;
 				}
 				else
-				{					
-					this.arrPoint[this.arrPoint.length] = obj;
-
-					this.crPoint({pos: obj.position.clone(), cursor: true, tool: true, joinP: [obj]});				
+				{	
+					this.finishToolPoint({obj: obj});	
 				}
 			}
 		}
@@ -277,9 +275,76 @@ class Point_1
 		
 		container.onmousemove =(e)=> { this.pointMove({ event: e, obj: obj }); }
 		
-		render();
+		//render();
 	}
 
+
+	finishToolPoint(params)
+	{
+		let obj = params.obj;
+		
+		let o = rayFromObj({obj: obj, arr: this.arrPoint});  
+		
+		if(o)
+		{
+			camOrbit.stopMove = false;	
+			//-------------
+			
+			let p = obj.userData.point.joinP;
+			let w = obj.userData.point.joinW;
+			
+			if(p.length == 0)
+			{
+				this.deletePoint({obj: obj});
+				this.crPoint({pos: obj.position.clone(), cursor: true, tool: true, joinP: [o]});
+			}
+			else
+			{
+				this.deleteValueFromArrya({arr: p[0].userData.point.joinP, obj: obj});
+				this.deleteValueFromArrya({arr: p[0].userData.point.joinW, obj: w[0]});
+				w[0].geometry.dispose();
+				scene.remove( w[0] );				
+				
+				scene.remove( obj );
+
+				if(1 == 1)
+				{
+					p[0].userData.point.joinP.push(o);
+					o.userData.point.joinP.push(p[0]);
+
+					this.crWall({p1: p[0], p2: o});			
+				}							
+			}			
+		}
+		else
+		{
+			this.arrPoint[this.arrPoint.length] = obj;
+			this.crPoint({pos: obj.position.clone(), cursor: true, tool: true, joinP: [obj]});							
+		}
+
+		// пускаем луч и определяем в какой объект упирается
+		function rayFromObj(params) 
+		{
+			let obj = params.obj;
+			let arr = params.arr;
+			
+			obj.updateMatrixWorld();
+			obj.geometry.computeBoundingSphere();
+			
+			let pos = obj.localToWorld( obj.geometry.boundingSphere.center.clone() );
+			pos.y = 1;
+			
+			let ray = new THREE.Raycaster();
+			ray.set( pos, new THREE.Vector3(0, -1, 0) );
+			
+			let intersects = ray.intersectObjects( arr, true );	
+			
+			let o = null;
+			if(intersects.length > 0) { o = intersects[0].object; }			
+			
+			return o;
+		}		
+	}
 	
 	pointMove(params)
 	{	
