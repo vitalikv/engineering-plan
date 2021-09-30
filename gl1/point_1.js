@@ -40,7 +40,13 @@ class Point_1
 			div.innerHTML = html;
 			let elem = div.firstChild;			
 			el.append(elem);		
-			elem.onmouseup =()=> { this.promise_1().then(data=> { this.crPoint({pos: data.pos, cursor: true, tool: true}); }) }			
+			elem.onmouseup =()=> 
+			{ 
+				if(camOrbit.activeCam == camOrbit.cam2D)
+				{
+					this.promise_1().then(data=> { this.crPoint({pos: data.pos, cursor: true, tool: true}); })
+				}				 
+			}			
 		}
 
 		if(1==1)
@@ -278,7 +284,7 @@ class Point_1
 		//render();
 	}
 
-
+	// закончили действия с Tool Point
 	finishToolPoint(params)
 	{
 		let obj = params.obj;
@@ -558,10 +564,17 @@ class Point_1
 		
 		if(p.length == 2 && !reset)
 		{
-			p[0].userData.point.joinP.push(p[1]);
-			p[1].userData.point.joinP.push(p[0]);
+			let exsist1 = p[0].userData.point.joinP.find(point => point == p[1]);
+			let exsist2 = p[1].userData.point.joinP.find(point => point == p[0]);
+			
+			// когда удалем точку из треугольника стен, чтобы не создавать стену в стене
+			if(!exsist1 && !exsist2) 
+			{
+				p[0].userData.point.joinP.push(p[1]);
+				p[1].userData.point.joinP.push(p[0]);
 
-			this.crWall({p1: p[0], p2: p[1]});			
+				this.crWall({p1: p[0], p2: p[1]});							
+			}
 		}
 		
 		let arr = [...p, obj];  
