@@ -18,6 +18,11 @@ class Point_1
 		this.countId.p = 0;
 		this.countId.w = 0;
 		
+		this.floor = [];
+		this.floor[0] = {};
+		this.floor[0].h1 = 0;
+		this.floor[0].h2 = 3;
+		
 		this.actTool = false;
 		
 		this.initEvent();	
@@ -114,8 +119,9 @@ class Point_1
 		let rayIntersect = this.rayIntersect.bind(this);
 		
 		let planeMath = this.planeMath;
-		planeMath.position.set( 0, 0, 0 );
+		planeMath.position.set( 0, this.floor[0].h1, 0 );
 		planeMath.rotation.set(-Math.PI/2, 0, 0);
+		planeMath.updateMatrixWorld();
 		
 		return new Promise((resolve, reject) => 
 		{
@@ -208,9 +214,6 @@ class Point_1
 		scene.add( obj );	
 		
 		
-		
-		
-		
 		if(!tool)
 		{	
 			this.arrPoint[this.arrPoint.length] = obj;		
@@ -236,9 +239,10 @@ class Point_1
 			
 		obj.userData.point.click.offset = new THREE.Vector3().subVectors( obj.position, rayPos );
 		
-		this.planeMath.position.set( 0, rayPos.y, 0 );
+		this.planeMath.position.set( 0, obj.position.y, 0 );
 		this.planeMath.rotation.set(-Math.PI/2, 0, 0);	
-
+		this.planeMath.updateMatrixWorld();
+		
 		camOrbit.stopMove = true;
 		
 		let container = this.params.container;
@@ -272,6 +276,8 @@ class Point_1
 				container.onmousemove = null; 
 				container.onmouseup = null; 
 				
+				this.finishSelectPoint({obj: obj});
+				
 				camOrbit.stopMove = false;
 			}
 			
@@ -284,73 +290,6 @@ class Point_1
 		//render();
 	}
 
-	// закончили действия с Tool Point
-	finishToolPoint(params)
-	{
-		let obj = params.obj;
-		
-		let o = rayFromObj({obj: obj, arr: this.arrPoint});  
-		
-		if(o)
-		{
-			camOrbit.stopMove = false;	
-			//-------------
-			
-			let p = obj.userData.point.joinP;
-			let w = obj.userData.point.joinW;
-			
-			if(p.length == 0)
-			{
-				this.deletePoint({obj: obj});
-				this.crPoint({pos: obj.position.clone(), cursor: true, tool: true, joinP: [o]});
-			}
-			else
-			{
-				this.deleteValueFromArrya({arr: p[0].userData.point.joinP, obj: obj});
-				this.deleteValueFromArrya({arr: p[0].userData.point.joinW, obj: w[0]});
-				w[0].geometry.dispose();
-				scene.remove( w[0] );				
-				
-				scene.remove( obj );
-
-				if(1 == 1)
-				{
-					p[0].userData.point.joinP.push(o);
-					o.userData.point.joinP.push(p[0]);
-
-					this.crWall({p1: p[0], p2: o});			
-				}							
-			}			
-		}
-		else
-		{
-			this.arrPoint[this.arrPoint.length] = obj;
-			this.crPoint({pos: obj.position.clone(), cursor: true, tool: true, joinP: [obj]});							
-		}
-
-		// пускаем луч и определяем в какой объект упирается
-		function rayFromObj(params) 
-		{
-			let obj = params.obj;
-			let arr = params.arr;
-			
-			obj.updateMatrixWorld();
-			obj.geometry.computeBoundingSphere();
-			
-			let pos = obj.localToWorld( obj.geometry.boundingSphere.center.clone() );
-			pos.y = 1;
-			
-			let ray = new THREE.Raycaster();
-			ray.set( pos, new THREE.Vector3(0, -1, 0) );
-			
-			let intersects = ray.intersectObjects( arr, true );	
-			
-			let o = null;
-			if(intersects.length > 0) { o = intersects[0].object; }			
-			
-			return o;
-		}		
-	}
 	
 	pointMove(params)
 	{	
@@ -361,8 +300,8 @@ class Point_1
 		
 		if(intersects.length == 0) return;
 		
+		obj.userData.point.click.offset.y = 0;
 		let pos = new THREE.Vector3().addVectors( intersects[ 0 ].point, obj.userData.point.click.offset );				
-		pos.y = 0; 
 		
 		obj.position.copy( pos );
 		
@@ -384,11 +323,12 @@ class Point_1
 		for ( let i = 0; i < arr.length; i++ )
 		{
 			if(arr[i] == obj) { continue; }		 
+			//if(Math.abs(arr[i].position.y - obj.position.y) > 0.01) { continue; }
 			
 			if(pos.distanceTo( arr[i].position ) < 0.2 / camOrbit.cam2D.zoom) 
 			{ 
 				pos = arr[i].position.clone();
-				//obj.userData.point.cross = point = obj_point[i];
+				
 				break;
 			}	
 		}
@@ -396,6 +336,138 @@ class Point_1
 		return pos;
 	}
 
+
+	// закончили действия с Tool Point
+	finishToolPoint(params)
+	{
+		let obj = params.obj;
+		
+		let o = this.rayFromPointToObj({obj: obj, arr: this.arrPoint});  
+		
+		if(o)
+		{
+			camOrbit.stopMove = false;	
+			//-------------
+			
+			let p = obj.userData.point.joinP;
+			let w = obj.userData.point.joinW;
+			
+			if(p.length == 0)
+			{
+				this.deletePoint({obj: obj});
+				this.crPoint({pos: obj.position.clone(), cursor: true, tool: true, joinP: [o]});
+			}
+			else
+			{
+				this.deleteValueFromArrya({arr: p[0].userData.point.joinP, obj: obj});
+				this.deleteValueFromArrya({arr: p[0].userData.point.joinW, obj: w[0]});
+				w[0].geometry.dispose();
+				scene.remove( w[0] );				
+				
+				this.deleteValueFromArrya({arr: this.arrPoint, obj: obj});
+				scene.remove( obj );
+
+				if(1 == 1)
+				{
+					p[0].userData.point.joinP.push(o);
+					o.userData.point.joinP.push(p[0]);
+
+					this.crWall({p1: p[0], p2: o});			
+				}							
+			}			
+		}
+		else
+		{
+			this.arrPoint[this.arrPoint.length] = obj;
+			this.crPoint({pos: obj.position.clone(), cursor: true, tool: true, joinP: [obj]});							
+		}
+	}
+	
+	
+	// закончили действия с перетаскиваемой Point
+	finishSelectPoint(params)
+	{
+		let obj = params.obj;
+		
+		let o = this.rayFromPointToObj({obj: obj, arr: this.arrPoint});  
+		
+		// удаляем перетаскиваемую точку и заменяем ее на ту, с которой она пересклась 
+		if(o)
+		{
+			
+			let p = obj.userData.point.joinP;
+			let w = obj.userData.point.joinW;
+			
+			for( let i = 0; i < p.length; i++ )
+			{			
+				this.deleteValueFromArrya({arr: p[i].userData.point.joinP, obj: obj});
+
+				for( let i2 = 0; i2 < w.length; i2++ )
+				{
+					this.deleteValueFromArrya({arr: p[i].userData.point.joinW, obj: w[i2]});
+					w[i2].geometry.dispose();
+					scene.remove( w[i2] );				
+				}
+			}
+			
+			obj.userData.point.joinP = [];
+			obj.userData.point.joinW = [];			
+			
+			this.deleteValueFromArrya({arr: this.arrPoint, obj: obj});
+			scene.remove( obj );
+
+			for( let i = 0; i < p.length; i++ )
+			{
+				if(p[i] == o) continue;
+				
+				let exsist = p[i].userData.point.joinP.find(point => point == o);
+				
+				if(!exsist)
+				{
+					p[i].userData.point.joinP.push(o);
+					o.userData.point.joinP.push(p[i]);
+
+					this.crWall({p1: p[i], p2: o});								
+				}
+			}
+
+			if(o.userData.point.joinP.length == 0)
+			{
+				this.deletePoint({obj: o});
+			}				
+		}
+	}	
+	
+	// пускаем луч из точки на что-то в сцене
+	rayFromPointToObj(params) 
+	{
+		let obj = params.obj;
+		let arr = params.arr;
+		
+		obj.updateMatrixWorld();
+		obj.geometry.computeBoundingSphere();
+		
+		let pos = obj.localToWorld( obj.geometry.boundingSphere.center.clone() );
+		pos.y += 10;
+		
+		let arr2 = []
+		for( let i = 0; i < arr.length; i++ )
+		{
+			if(arr[i] != obj) arr2.push(arr[i]);
+		}		
+		
+		let ray = new THREE.Raycaster();
+		ray.set( pos, new THREE.Vector3(0, -1, 0) );
+		
+		let intersects = ray.intersectObjects( arr2, true );	
+		
+		let o = null;
+		if(intersects.length > 0) { o = intersects[0].object; }			
+		
+		return o;
+	}	
+	
+	
 	crWall(params)
 	{
 		let id = params.id;		
@@ -474,6 +546,7 @@ class Point_1
 		let shape = new THREE.Shape( arr );
 		let geometry = new THREE.ExtrudeGeometry( shape, { bevelEnabled: false, depth: 3 } );
 		geometry.rotateX(-Math.PI/2);
+		geometry.translate(0, p1.position.y, 0);
 
 		return geometry;
 	}
