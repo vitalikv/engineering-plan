@@ -75,6 +75,8 @@ class Point_1
 			el.append(elem);		
 			elem.onmousedown =()=> { this.loadFile({test: true, file: 'saveTest_1.json'}); }			
 		}	
+		
+		crHtml_FloorLevel();
 	}
 	
 	
@@ -685,6 +687,8 @@ class Point_1
 	
 		this.countId.p = 0;
 		this.arrPoint = [];
+		
+		this.actTool = false;
 	}
 
 	async saveFile(params)
@@ -834,7 +838,54 @@ class Point_1
 
 
 
+function crHtml_FloorLevel()
+{
+	let el = document.querySelector('[nameId="blockFloorLevel"]');	
 
+	let html = 
+	`<div nameId="rp_plane_1" style="height: 250px; margin: auto 10px; border: 1px solid #ccc; border-radius: 3px; background-color: #fff;">
+		<div nameId="itemsFloor">
+		</div>
+		<div nameId="addItemFloor" style="display: flex; margin: 3px 0; padding: 3px; border: 1px solid #ccc; background: #ffffff; cursor: pointer;">	
+			<div style="margin: auto 20px; font-family: arial,sans-serif; font-size: 15px; color: #666; text-decoration: none;"> + </div>	
+		</div>					
+	</div>`;
+	
+	let div = document.createElement('div');
+	div.innerHTML = html;
+	let elem = div.firstChild;			
+	el.append(elem);
+
+	let el_itemsFloor = elem.querySelector('[nameId="itemsFloor"]');
+	let el_addItemFloor = elem.querySelector('[nameId="addItemFloor"]');
+	
+	el_addItemFloor.onmousedown =()=> { addItemFloorLevel({el: el_itemsFloor}); }
+	
+	function addItemFloorLevel(params)
+	{
+		let el = params.el;
+
+		let html = 		
+		`<div style="display: flex; margin: 3px 0; padding: 3px; border: 1px solid #ccc; background: #ffffff; cursor: pointer;">
+			<div style="display: flex;">
+				<div style="margin: auto 20px; font-family: arial,sans-serif; font-size: 15px; color: #666; text-decoration: none;">этаж</div>
+				<div nameId="delete" style="margin: auto 20px auto auto; font-family: arial,sans-serif; font-size: 15px; color: #666; text-decoration: none;">удалить</div>
+			</div>
+		</div>`;					
+	
+		let div = document.createElement('div');
+		div.innerHTML = html;
+		let elem = div.firstChild;			
+		el.append(elem);
+	
+		elem.onmousedown =()=> { console.log(444); }
+		
+		let el_delete = elem.querySelector('[nameId="delete"]');
+		
+		el_delete.onmousedown =(e)=> { console.log('el_delete'); e.stopPropagation(); }
+	}
+	
+}
 
 
 

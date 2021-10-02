@@ -45,6 +45,9 @@
 			</div>
 			
 			<div nameId="panelR" style="position: relative; flex-basis: 310px; background: #F0F0F0; border-left: 1px solid #D1D1D1;">
+				<div nameId="blockFloorLevel">
+				
+				</div>
 			</div>
 		</div>
 	</div>
