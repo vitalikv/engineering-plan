@@ -76,6 +76,7 @@ function init()
 	
 	pointClass_1 = new Point_1({container: infProg.el.canv, renderer: renderer, scene: scene});
 	pointClass_2 = new Point_2({container: infProg.el.canv, renderer: renderer, scene: scene});
+	new crHtml_FloorLevel({});
 	
 	initLight();
 	
