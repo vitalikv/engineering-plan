@@ -19,7 +19,7 @@ class Point_1
 		this.countId.w = 0;
 		
 		this.floor = [];		
-		this.actFloor = 0;
+		this.actFloor = -1;
 		
 		this.actTool = false;
 		
@@ -143,12 +143,18 @@ class Point_1
 	{
 		let floor = this.floor;
 		
+		if(params.type == 'getActiveFloor') { return getActiveFloor({tt: this, id: params.id}); }
 		if(params.type == 'setActiveFloor') { setActiveFloor({tt: this, id: params.id}); }
 		if(params.type == 'countFloor') { return countFloor({tt: this}); }
 		if(params.type == 'add') { addFloor({tt: this}); }
 		if(params.type == 'delete') { deleteFloor({tt: this}); }
 
 
+		function getActiveFloor(params)
+		{
+			return params.tt.actFloor;
+		}
+		
 		function setActiveFloor(params)
 		{
 			params.tt.actFloor = params.id;
@@ -167,16 +173,22 @@ class Point_1
 			params.tt.floor[n].pps = [];
 			params.tt.floor[n].h1 = (n == 0) ? 0 : params.tt.floor[n - 1].h2;
 			params.tt.floor[n].h2 = params.tt.floor[n].h1 + 3;
-
+			params.tt.floor[n].el = null;
+			
 			params.tt.actFloor = n;
 		}
 
 		function deleteFloor(params)
 		{
-			if(params.tt.floor.length > 1) params.tt.floor.pop();
+			if(params.tt.floor.length > 1) 
+			{
+				params.tt.floor[params.tt.floor.length - 1].el.remove();
+				params.tt.floor.pop();
+			}
 
 			params.tt.actFloor = params.tt.floor.length - 1;
-		}		
+		}
+		
 		console.log(this.actFloor);
 	}
 	
@@ -723,6 +735,7 @@ class Point_1
 	
 	resetScene()
 	{
+		
 		for( let i = 0; i < this.floor.length; i++ )
 		{
 			let f = this.floor[i];
@@ -734,8 +747,11 @@ class Point_1
 		}				
 	
 		this.countId.p = 0;
-		this.actFloor = 0;
+		this.countId.w = 0;
+		
 		this.actTool = false;
+		
+		//funcToFucn('addFloor', {});
 		
 		console.log(this.floor);		
 	}
@@ -837,10 +853,11 @@ class Point_1
 		{
 			let f = json.floor[i];
 			
-			if(f.point.length > 0) 
+			if(i > 0) 
 			{ 
-				this.settingFloor({type: 'add'});
-				this.settingFloor({type: 'setActiveFloor', id: i}); 
+				funcToFucn('addFloor', {});
+				//this.settingFloor({type: 'add'});
+				//this.settingFloor({type: 'setActiveFloor', id: i}); 
 			}
 			
 			for( let i2 = 0; i2 < f.point.length; i2++ )
@@ -906,6 +923,45 @@ class Point_1
 }
 
 
+let listActFucn =
+{
+	addFloor: function () 
+	{
+		pointClass_1.settingFloor({type: 'add'});
+		
+		let id = pointClass_1.settingFloor({type: 'getActiveFloor'});
+		let arrFloor = pointClass_1.floor;
+		floorLevelUI.addItemFloor({id: id, arrFloor: arrFloor});
+	},
+	
+	selectFloor: function (params)
+	{
+		let id = params.id;
+		let el = params.el;
+				
+		pointClass_1.settingFloor({type: 'setActiveFloor', id: id});
+		
+		let arrFloor = pointClass_1.floor;
+		floorLevelUI.selectItemFloor({el: el, arrFloor: arrFloor});
+	},
+	
+	deleteFloor: function ()
+	{
+		pointClass_1.settingFloor({type: 'delete'});		
+		
+		let id = pointClass_1.settingFloor({type: 'getActiveFloor'});
+		let arrFloor = pointClass_1.floor;
+		floorLevelUI.upItemFloor({arrFloor: arrFloor});
+		floorLevelUI.selectItemFloor({el: arrFloor[id].el, arrFloor: arrFloor});
+	}	
+}
+
+
+
+function funcToFucn(name, params) 
+{
+	if (typeof listActFucn[name] === 'function') { listActFucn[name](params); }
+}
 
 
 class crHtml_FloorLevel
@@ -915,11 +971,13 @@ class crHtml_FloorLevel
 		this.params = params;
 		this.el = {};
 		this.el.main = document.querySelector('[nameId="blockFloorLevel"]');
+		this.el.itemsFloor = null;
+		this.el.addItemFloor = null;
 		
 		this.el.items = [];		
 		
 		this.crBlockHtml();	
-		this.addItemFloor();
+		//this.addItemFloor();
 	}	
 	
 		
@@ -944,21 +1002,23 @@ class crHtml_FloorLevel
 
 		this.el.addItemFloor.onmousedown =()=> 
 		{ 
-			this.addItemFloor(); 
+			//this.addItemFloor(); 
+			funcToFucn('addFloor', {});
 		}		
 	}
 	
 	
-	addItemFloor()
+	addItemFloor(params)
 	{
+		let id = params.id;
+		let arrFloor = params.arrFloor;
+		
 		let el = this.el.itemsFloor;
-
-		let idFloor = pointClass_1.settingFloor({type: 'countFloor'});
 		
 		let html = 		
 		`<div style="display: flex; margin: 3px 0; padding: 3px; border: 1px solid #ccc; background: #ffffff; cursor: pointer;">
 			<div style="display: flex;">
-				<div style="margin: auto 20px; font-family: arial,sans-serif; font-size: 15px; color: #666; text-decoration: none;">этаж ${idFloor}</div>
+				<div style="margin: auto 20px; font-family: arial,sans-serif; font-size: 15px; color: #666; text-decoration: none;">этаж ${id}</div>
 				<div nameId="delete" style="margin: auto 20px auto auto; font-family: arial,sans-serif; font-size: 15px; color: #666; text-decoration: none;">удалить</div>
 			</div>
 		</div>`;					
@@ -968,46 +1028,46 @@ class crHtml_FloorLevel
 		let elem = div.firstChild;			
 		el.append(elem);
 	
-		elem.onmousedown =()=> { this.selectItemFloor({el: elem, idFloor: idFloor}); }
+		elem.onmousedown =()=> { funcToFucn('selectFloor', {id: id, el: elem}); }
 		
-		let el_delete = elem.querySelector('[nameId="delete"]');
+		let el_delete = elem.querySelector('[nameId="delete"]');		
+		el_delete.onmousedown =(e)=> { funcToFucn('deleteFloor', {}); e.stopPropagation(); }
+	
+		arrFloor[id].el = elem;
+		this.upItemFloor({arrFloor: arrFloor});
 		
-		el_delete.onmousedown =(e)=> { this.deleteItemFloor({el: elem}); e.stopPropagation(); }
-		
-		this.el.items[this.el.items.length] = elem;
-		
-		this.selectItemFloor({el: elem, idFloor: idFloor});
-		
-		pointClass_1.settingFloor({type: 'add'});
+		this.selectItemFloor({el: elem, arrFloor: arrFloor});
 	}
 
-	deleteItemFloor(params)
+	upItemFloor(params)
 	{
-		if(this.el.items.length > 1) 
-		{
-			let el = this.el.items[this.el.items.length - 1];
-			this.el.items.pop();			
-			el.remove();
-			
-			pointClass_1.settingFloor({type: 'delete'});
-			
-			let idFloor = pointClass_1.settingFloor({type: 'countFloor'}) - 1;
-			this.selectItemFloor({el: this.el.items[this.el.items.length - 1], idFloor: idFloor});			
-		}		
+		let arrFloor = params.arrFloor;
 		
-		console.log('el_delete', this.el.items); 
+		for( let i = 0; i < arrFloor.length; i++ )
+		{
+			let el = arrFloor[i].el.querySelector('[nameId="delete"]');			
+			el.onmousedown =(e)=> {  }
+			el.style.display = 'none';
+		}
+		
+		if(arrFloor.length > 1)
+		{
+			let n = arrFloor.length - 1;
+			let el = arrFloor[n].el.querySelector('[nameId="delete"]');
+			el.onmousedown =(e)=> { funcToFucn('deleteFloor', {}); e.stopPropagation(); }
+			el.style.display = '';
+		}
+		
 	}
-
 
 	selectItemFloor(params)
 	{
 		let el = params.el;
-		let idFloor = params.idFloor;
+		let arrFloor = params.arrFloor;
 		
-		this.el.items.forEach(el => el.style.backgroundColor = '#fff' )
+		arrFloor.forEach(item => item.el.style.backgroundColor = '#fff' )
 		
-		el.style.backgroundColor = 'rgb(167, 207, 242)';
-		pointClass_1.settingFloor({type: 'setActiveFloor', id: idFloor});
+		el.style.backgroundColor = 'rgb(167, 207, 242)';		
 	}
 }
 

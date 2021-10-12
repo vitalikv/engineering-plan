@@ -39,7 +39,7 @@ function render()
 
 
 let camOrbit;
-let pointClass_1, pointClass_2;
+let pointClass_1, pointClass_2, floorLevelUI;
 
 
 
@@ -76,7 +76,8 @@ function init()
 	
 	pointClass_1 = new Point_1({container: infProg.el.canv, renderer: renderer, scene: scene});
 	pointClass_2 = new Point_2({container: infProg.el.canv, renderer: renderer, scene: scene});
-	new crHtml_FloorLevel({});
+	floorLevelUI = new crHtml_FloorLevel({});
+	funcToFucn('addFloor', {});
 	
 	initLight();
 	
