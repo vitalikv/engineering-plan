@@ -19,11 +19,19 @@ class Point_1
 		this.countId.w = 0;
 		
 		this.floor = [];		
-		this.actFloor = -1;
+		this.actFloorId = -1;
 		
 		this.actTool = false;
 		
-		this.initEvent();	
+		this.initEvent();
+
+		this.el = {};
+		this.el.blockFloor = document.querySelector('[nameId="blockFloorLevel"]');
+		this.el.listFloor = null;
+		this.el.addItemFloor = null;
+
+		this.initFloorHtml();
+		this.resetScene();
 	}
 	
 
@@ -118,7 +126,7 @@ class Point_1
 		let rayIntersect = this.rayIntersect.bind(this);
 		
 		let planeMath = this.planeMath;
-		planeMath.position.set( 0, this.floor[this.actFloor].h1, 0 );
+		planeMath.position.set( 0, this.floor[this.actFloorId].h1, 0 );
 		planeMath.rotation.set(-Math.PI/2, 0, 0);
 		planeMath.updateMatrixWorld();
 		
@@ -138,64 +146,151 @@ class Point_1
 		});
 	}	
 	
+	initFloorHtml()
+	{
+		let html = 
+		`<div nameId="rp_plane_1" style="height: 250px; margin: auto 10px; border: 1px solid #ccc; border-radius: 3px; background-color: #fff;">
+			<div nameId="listFloor">
+			</div>
+			<div nameId="addItemFloor" style="display: flex; margin: 3px 0; padding: 3px; border: 1px solid #ccc; background: #ffffff; cursor: pointer;">	
+				<div style="margin: auto 20px; font-family: arial,sans-serif; font-size: 15px; color: #666; text-decoration: none;"> + </div>	
+			</div>					
+		</div>`;
+		
+		let div = document.createElement('div');
+		div.innerHTML = html;
+		let elem = div.firstChild;			
+		this.el.blockFloor.append(elem);
+
+		this.el.listFloor = elem.querySelector('[nameId="listFloor"]');
+		this.el.addItemFloor = elem.querySelector('[nameId="addItemFloor"]');
+
+		this.el.addItemFloor.onmousedown =()=> 
+		{ 
+			this.settingFloor({type: 'add'}); 
+		}		
+	}
+
 	
 	settingFloor(params)
 	{
-		let floor = this.floor;
 		
-		if(params.type == 'getActiveFloor') { return getActiveFloor({tt: this, id: params.id}); }
-		if(params.type == 'setActiveFloor') { setActiveFloor({tt: this, id: params.id}); }
-		if(params.type == 'countFloor') { return countFloor({tt: this}); }
-		if(params.type == 'add') { addFloor({tt: this}); }
-		if(params.type == 'delete') { deleteFloor({tt: this}); }
-
-
-		function getActiveFloor(params)
+		let setActiveFloor =(params)=>
 		{
-			return params.tt.actFloor;
+			this.actFloorId = params.id;
+			selectItemFloor();			
 		}
 		
-		function setActiveFloor(params)
+		let addFloor =()=>
 		{
-			params.tt.actFloor = params.id;
-		}
-
-		function countFloor(params)
-		{
-			return params.tt.floor.length;
-		}
-		
-		function addFloor(params)
-		{
-			let n = params.tt.floor.length;
+			let n = this.floor.length;
 			
-			params.tt.floor[n] = {};
-			params.tt.floor[n].pps = [];
-			params.tt.floor[n].h1 = (n == 0) ? 0 : params.tt.floor[n - 1].h2;
-			params.tt.floor[n].h2 = params.tt.floor[n].h1 + 3;
-			params.tt.floor[n].el = null;
+			this.floor[n] = {};
+			this.floor[n].pps = [];
+			this.floor[n].h1 = (n == 0) ? 0 : this.floor[n - 1].h2;
+			this.floor[n].h2 = this.floor[n].h1 + 3;
+			this.floor[n].el = null;
 			
-			params.tt.actFloor = n;
-		}
+			this.actFloorId = n;
 
-		function deleteFloor(params)
-		{
-			if(params.tt.floor.length > 1) 
+			let createItemFloor =(params)=>
 			{
-				params.tt.floor[params.tt.floor.length - 1].el.remove();
-				params.tt.floor.pop();
+				let id = this.actFloorId;
+				
+				let html = 		
+				`<div style="display: flex; margin: 3px 0; padding: 3px; border: 1px solid #ccc; background: #ffffff; cursor: pointer;">
+					<div style="display: flex;">
+						<div style="margin: auto 20px; font-family: arial,sans-serif; font-size: 15px; color: #666; text-decoration: none;">этаж ${id}</div>
+						<div nameId="delete" style="margin: auto 20px auto auto; font-family: arial,sans-serif; font-size: 15px; color: #666; text-decoration: none;">удалить</div>
+					</div>
+				</div>`;					
+			
+				let div = document.createElement('div');
+				div.innerHTML = html;
+				let elem = div.firstChild;			
+				this.el.listFloor.append(elem);
+			
+				elem.onmousedown =()=> { setActiveFloor({id: id}); }
+				
+				let el_delete = elem.querySelector('[nameId="delete"]');		
+				el_delete.onmousedown =(e)=> { deleteFloor(); e.stopPropagation(); }
+			
+				this.floor[id].el = elem;
+			}
+	
+			createItemFloor();
+			upItemFloor();
+			selectItemFloor();			
+		}
+
+		let deleteFloor =(params)=>
+		{
+			if(!params) params = {};
+			
+			let execute = false;
+			
+			if(params.reset) { execute = true; }
+			if(this.floor.length > 1) { execute = true; }
+			
+			if(execute) 
+			{
+				let n = this.floor.length - 1;
+				
+				this.floor[n].el.remove();
+
+				for( let i = this.floor[n].pps.length - 1; i >= 0; i-- )
+				{ 
+					this.deletePoint({obj: this.floor[n].pps[i], reset: true});		
+				}		
+				
+				this.floor.pop();
 			}
 
-			params.tt.actFloor = params.tt.floor.length - 1;
+			this.actFloorId = this.floor.length - 1;
+			
+			upItemFloor();
+			selectItemFloor();			
+		}
+
+		let selectItemFloor =()=>
+		{			
+			this.floor.forEach(item => item.el.style.backgroundColor = '#fff' )
+			
+			if(this.actFloorId > -1)
+			{
+				this.floor[this.actFloorId].el.style.backgroundColor = 'rgb(167, 207, 242)';
+			}					
 		}
 		
-		console.log(this.actFloor);
+		let upItemFloor =()=>
+		{			
+			for( let i = 0; i < this.floor.length; i++ )
+			{
+				let el = this.floor[i].el.querySelector('[nameId="delete"]');			
+				el.onmousedown =(e)=> {  }
+				el.style.display = 'none';
+			}
+			
+			if(this.floor.length > 1)
+			{
+				let n = this.floor.length - 1;
+				let el = this.floor[n].el.querySelector('[nameId="delete"]');
+				el.onmousedown =(e)=> { deleteFloor(); e.stopPropagation(); }
+				el.style.display = '';
+			}			
+		}		
+		
+		if(params.type == 'setActiveFloor') { setActiveFloor({id: params.id}); }
+		if(params.type == 'add') { addFloor(); }
+		if(params.type == 'delete') { deleteFloor(params); }
+		
+		console.log(this.actFloorId);
 	}
 	
 	
 	getActFloorArrPoint()
 	{
-		return this.floor[this.actFloor].pps;
+		return this.floor[this.actFloorId].pps;
 	}
 	
 	// кликнули куда-то в сцену
@@ -275,7 +370,7 @@ class Point_1
 		
 		if(!tool)
 		{	
-			this.floor[this.actFloor].pps.push(obj);
+			this.floor[this.actFloorId].pps.push(obj);
 		}
 		
 		if(cursor) 
@@ -437,7 +532,7 @@ class Point_1
 		}
 		else
 		{
-			this.floor[this.actFloor].pps.push(obj);
+			this.floor[this.actFloorId].pps.push(obj);
 			this.crPoint({pos: obj.position.clone(), cursor: true, tool: true, joinP: [obj]});							
 		}
 	}
@@ -735,15 +830,11 @@ class Point_1
 	
 	resetScene()
 	{
+		let n = this.floor.length;
 		
-		for( let i = 0; i < this.floor.length; i++ )
+		for( let i = n - 1; i >= 0; i-- )
 		{
-			let f = this.floor[i];
-			
-			for( let i2 = f.pps.length - 1; i2 >= 0; i2-- )
-			{ 
-				this.deletePoint({obj: f.pps[i2], reset: true});		
-			}			
+			this.settingFloor({type: 'delete', reset: true});		
 		}				
 	
 		this.countId.p = 0;
@@ -751,7 +842,8 @@ class Point_1
 		
 		this.actTool = false;
 		
-		//funcToFucn('addFloor', {});
+		this.actFloorId = -1;		
+		this.settingFloor({type: 'add'});
 		
 		console.log(this.floor);		
 	}
@@ -855,9 +947,7 @@ class Point_1
 			
 			if(i > 0) 
 			{ 
-				funcToFucn('addFloor', {});
-				//this.settingFloor({type: 'add'});
-				//this.settingFloor({type: 'setActiveFloor', id: i}); 
+				this.settingFloor({type: 'add'});
 			}
 			
 			for( let i2 = 0; i2 < f.point.length; i2++ )
@@ -874,7 +964,7 @@ class Point_1
 			}			
 		}
 		
-		
+		this.settingFloor({type: 'setActiveFloor', id: 0});
 		//let arrId = json.point.map(o => o.id);
 		//let maxId = Math.max(...arrId);
 		
@@ -925,34 +1015,19 @@ class Point_1
 
 let listActFucn =
 {
-	addFloor: function () 
+	addFloor() 
 	{
 		pointClass_1.settingFloor({type: 'add'});
-		
-		let id = pointClass_1.settingFloor({type: 'getActiveFloor'});
-		let arrFloor = pointClass_1.floor;
-		floorLevelUI.addItemFloor({id: id, arrFloor: arrFloor});
 	},
 	
-	selectFloor: function (params)
+	selectFloor(params)
 	{
-		let id = params.id;
-		let el = params.el;
-				
-		pointClass_1.settingFloor({type: 'setActiveFloor', id: id});
-		
-		let arrFloor = pointClass_1.floor;
-		floorLevelUI.selectItemFloor({el: el, arrFloor: arrFloor});
+		pointClass_1.settingFloor({type: 'setActiveFloor', id: params.id});
 	},
 	
-	deleteFloor: function ()
+	deleteFloor()
 	{
 		pointClass_1.settingFloor({type: 'delete'});		
-		
-		let id = pointClass_1.settingFloor({type: 'getActiveFloor'});
-		let arrFloor = pointClass_1.floor;
-		floorLevelUI.upItemFloor({arrFloor: arrFloor});
-		floorLevelUI.selectItemFloor({el: arrFloor[id].el, arrFloor: arrFloor});
 	}	
 }
 
@@ -964,112 +1039,6 @@ function funcToFucn(name, params)
 }
 
 
-class crHtml_FloorLevel
-{
-	constructor(params)
-	{
-		this.params = params;
-		this.el = {};
-		this.el.main = document.querySelector('[nameId="blockFloorLevel"]');
-		this.el.itemsFloor = null;
-		this.el.addItemFloor = null;
-		
-		this.el.items = [];		
-		
-		this.crBlockHtml();	
-		//this.addItemFloor();
-	}	
-	
-		
-	crBlockHtml()
-	{
-		let html = 
-		`<div nameId="rp_plane_1" style="height: 250px; margin: auto 10px; border: 1px solid #ccc; border-radius: 3px; background-color: #fff;">
-			<div nameId="itemsFloor">
-			</div>
-			<div nameId="addItemFloor" style="display: flex; margin: 3px 0; padding: 3px; border: 1px solid #ccc; background: #ffffff; cursor: pointer;">	
-				<div style="margin: auto 20px; font-family: arial,sans-serif; font-size: 15px; color: #666; text-decoration: none;"> + </div>	
-			</div>					
-		</div>`;
-		
-		let div = document.createElement('div');
-		div.innerHTML = html;
-		let elem = div.firstChild;			
-		this.el.main.append(elem);
-
-		this.el.itemsFloor = elem.querySelector('[nameId="itemsFloor"]');
-		this.el.addItemFloor = elem.querySelector('[nameId="addItemFloor"]');
-
-		this.el.addItemFloor.onmousedown =()=> 
-		{ 
-			//this.addItemFloor(); 
-			funcToFucn('addFloor', {});
-		}		
-	}
-	
-	
-	addItemFloor(params)
-	{
-		let id = params.id;
-		let arrFloor = params.arrFloor;
-		
-		let el = this.el.itemsFloor;
-		
-		let html = 		
-		`<div style="display: flex; margin: 3px 0; padding: 3px; border: 1px solid #ccc; background: #ffffff; cursor: pointer;">
-			<div style="display: flex;">
-				<div style="margin: auto 20px; font-family: arial,sans-serif; font-size: 15px; color: #666; text-decoration: none;">этаж ${id}</div>
-				<div nameId="delete" style="margin: auto 20px auto auto; font-family: arial,sans-serif; font-size: 15px; color: #666; text-decoration: none;">удалить</div>
-			</div>
-		</div>`;					
-	
-		let div = document.createElement('div');
-		div.innerHTML = html;
-		let elem = div.firstChild;			
-		el.append(elem);
-	
-		elem.onmousedown =()=> { funcToFucn('selectFloor', {id: id, el: elem}); }
-		
-		let el_delete = elem.querySelector('[nameId="delete"]');		
-		el_delete.onmousedown =(e)=> { funcToFucn('deleteFloor', {}); e.stopPropagation(); }
-	
-		arrFloor[id].el = elem;
-		this.upItemFloor({arrFloor: arrFloor});
-		
-		this.selectItemFloor({el: elem, arrFloor: arrFloor});
-	}
-
-	upItemFloor(params)
-	{
-		let arrFloor = params.arrFloor;
-		
-		for( let i = 0; i < arrFloor.length; i++ )
-		{
-			let el = arrFloor[i].el.querySelector('[nameId="delete"]');			
-			el.onmousedown =(e)=> {  }
-			el.style.display = 'none';
-		}
-		
-		if(arrFloor.length > 1)
-		{
-			let n = arrFloor.length - 1;
-			let el = arrFloor[n].el.querySelector('[nameId="delete"]');
-			el.onmousedown =(e)=> { funcToFucn('deleteFloor', {}); e.stopPropagation(); }
-			el.style.display = '';
-		}
-		
-	}
-
-	selectItemFloor(params)
-	{
-		let el = params.el;
-		let arrFloor = params.arrFloor;
-		
-		arrFloor.forEach(item => item.el.style.backgroundColor = '#fff' )
-		
-		el.style.backgroundColor = 'rgb(167, 207, 242)';		
-	}
-}
 
 
 
