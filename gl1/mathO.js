@@ -24,10 +24,7 @@ function quaternionDirection(dir1)
 }
 
 
-function isNumeric(n) 
-{   
-   return !isNaN(parseFloat(n)) && isFinite(n);   
-}
+
 
 
 

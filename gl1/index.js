@@ -39,7 +39,8 @@ function render()
 
 
 let camOrbit;
-let pointClass_1, pointClass_2, floorLevelUI;
+let custMath;
+let pointClass_1, pointClass_2;
 
 
 
@@ -77,12 +78,14 @@ function init()
 	pointClass_1 = new Point_1({container: infProg.el.canv, renderer: renderer, scene: scene});
 	pointClass_2 = new Point_2({container: infProg.el.canv, renderer: renderer, scene: scene});
 	
+	custMath = new CustMath({});
+	
 	initLight();
 	
 	//let tt = new wallCCC({});
 	//tt.initTestWall();	
 	
-	
+	testWallCross();
 	render();	
 }
 
@@ -117,6 +120,51 @@ function getConsoleRendererInfo()
 }
 
 document.addEventListener("DOMContentLoaded", init);
+
+
+
+
+
+
+
+
+function testWallCross()
+{
+	let arrP_1 = [new THREE.Vector3(-1.2, 0, 0.3), new THREE.Vector3(1.2, 0, -0.7)];
+	
+	{		
+		let geometry = new THREE.BufferGeometry().setFromPoints( arrP_1 );		
+		let line = new THREE.Line( geometry, new THREE.LineBasicMaterial({ color: 0x0000ff }) );
+		scene.add( line );		
+	}
+
+	let arrP_2 = [new THREE.Vector3(-0.6, 0, 1.1), new THREE.Vector3(0.6, 0, 2.6)];
+	
+	{		
+		let geometry = new THREE.BufferGeometry().setFromPoints( arrP_2 );		
+		let line = new THREE.Line( geometry, new THREE.LineBasicMaterial({ color: 0x0000ff }) );
+		scene.add( line );			
+	}
+	
+	let point = custMath.spPoint(arrP_1[0], arrP_1[1], arrP_2[0]);
+	let cross = custMath.calScal(arrP_1[0], arrP_1[1], point);
+	
+	if(cross)
+	{		
+		let geometry = new THREE.BufferGeometry().setFromPoints( [point, arrP_2[0]] );		
+		let line = new THREE.Line( geometry, new THREE.LineBasicMaterial({ color: 0xff0000 }) );
+		scene.add( line );
+		
+		
+		console.log(point);
+	}	
+	
+		
+	
+	render();
+}
+
+
 
 
 

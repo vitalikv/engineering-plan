@@ -61,6 +61,7 @@
 <script src="js/csg/three-csg.js"></script>
 
 
+<script src="fMath.js"></script>
 <script src="mathO.js"></script>
 <script src="camera.js"></script>
 <script src="saveLoad/load.js"></script>

@@ -12,15 +12,15 @@ class Point_1
 		this.m_active = new THREE.MeshPhongMaterial( {color: 0xff0000, wireframe: false} );	
 
 		this.m_w_default = new THREE.MeshPhongMaterial( {color: 0xcccccc, wireframe: false} );
-		
-		
+				
+		this.lineAxis = this.initLineAxis();
+				
 		this.countId = {};
 		this.countId.p = 0;
 		this.countId.w = 0;
 		
 		this.floor = [];		
-		this.actFloorId = -1;
-		
+		this.actFloorId = -1;		
 		this.actTool = false;
 		
 		this.initEvent();
@@ -118,6 +118,14 @@ class Point_1
 		return geometry;
 	}
 	
+	
+	initLineAxis()
+	{
+		let obj = new THREE.Line( new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0xff0000 }) );		
+		scene.add( obj );	
+		
+		return obj;
+	}
 	
 
 	promise_1()
@@ -390,6 +398,39 @@ class Point_1
 		let rayPos = params.rayPos;	
 		let obj = params.obj;	
 
+
+		//------
+		let arrPW = [];
+		let arr = this.getActFloorArrPoint();
+		for ( let i = 0; i < arr.length; i++ )
+		{
+			if(arr[i] == obj) { continue; }
+			
+			let joinP = arr[i].userData.point.joinP;
+			
+			for ( let i2 = 0; i2 < joinP.length; i2++ )
+			{
+				if(joinP[i2] == obj) continue;
+				
+				let add = true;
+				// проверка на совпадение, если есть то не добавляем в массив
+				for ( let i3 = 0; i3 < arrPW.length; i3++ )
+				{
+					let exsist1 = false;
+					let exsist2 = false;
+					
+					if(arrPW[i3][0] == arr[i] || arrPW[i3][1] == arr[i]){ exsist1 = true; }
+					if(arrPW[i3][0] == joinP[i2] || arrPW[i3][1] == joinP[i2]){ exsist2 = true; }
+					
+					if(exsist1 && exsist2) { add = false; break; }
+				}
+				
+				if(add) arrPW.push( [arr[i], joinP[i2]] );
+			}
+		}
+		console.log(arrPW);
+		//------
+		
 			
 		obj.userData.point.click.offset = new THREE.Vector3().subVectors( obj.position, rayPos );
 		
@@ -439,7 +480,9 @@ class Point_1
 			this.activePoint({obj: obj});		
 		}
 		
-		container.onmousemove =(e)=> { this.pointMove({ event: e, obj: obj }); }
+		container.onmousemove =(e)=> { this.pointMove({ event: e, obj: obj, arrPW: arrPW }); }
+
+
 		
 		//render();
 	}
@@ -449,6 +492,7 @@ class Point_1
 	{	
 		let event = params.event;
 		let obj = params.obj;
+		let arrPW = params.arrPW;
 		
 		let intersects = this.rayIntersect( event, this.planeMath, 'one' ); 
 		
@@ -459,18 +503,25 @@ class Point_1
 		
 		obj.position.copy( pos );
 		
-		pos = this.nearPoint({obj: obj});
-		obj.position.copy( pos );
+		
+		
+		let newPos = this.nearPoint({obj: obj});
+		
+		if(!newPos) { newPos = this.crossPointOnWall({obj: obj, arrPW: arrPW}); }
+		
+		if(newPos) { obj.position.copy( newPos ); }
 		
 		this.updateWall({obj: obj});
 		
 		render();
 	}
 
+	
 	nearPoint(params)
 	{
 		let obj = params.obj;
 		
+		let newPos = null;
 		let pos = obj.position.clone(); 
 		let arr = this.getActFloorArrPoint();
 		
@@ -479,17 +530,52 @@ class Point_1
 			if(arr[i] == obj) { continue; }		 
 			//if(Math.abs(arr[i].position.y - obj.position.y) > 0.01) { continue; }
 			
-			if(pos.distanceTo( arr[i].position ) < 0.2 / camOrbit.cam2D.zoom) 
-			{ 
-				pos = arr[i].position.clone();
-				
-				break;
-			}	
+			if(pos.distanceTo( arr[i].position ) > 0.2 / camOrbit.cam2D.zoom)  { continue; }
+			
+			newPos = arr[i].position.clone();			
+			break;
 		}
 
-		return pos;
+		return newPos;
 	}
 
+
+	crossPointOnWall(params)
+	{
+		let obj = params.obj;
+		
+		let newPos = null;		
+		let pos = obj.position.clone();
+		let arrPW = params.arrPW;
+
+		
+		for ( let i = 0; i < arrPW.length; i++ )
+		{
+			let p1 = arrPW[i][0].position;
+			let p2 = arrPW[i][1].position;
+			
+			let pos2 = custMath.spPoint(p1, p2, pos);
+			let cross = custMath.calScal(p1, p2, pos2);
+
+			if(cross)
+			{	
+				if(new THREE.Vector2(pos.x, pos.z).distanceTo( new THREE.Vector2(pos2.x, pos2.z) ) > 0.2 / camOrbit.cam2D.zoom) { continue; }
+				
+				let geometry = new THREE.BufferGeometry().setFromPoints( [pos, pos2] );
+				
+				this.lineAxis.geometry.dispose();		
+				this.lineAxis.geometry = geometry;
+				
+				newPos = pos2;
+				
+				break;
+			}			
+		}		
+		
+		return newPos;
+	}
+	
+	
 
 	// закончили действия с Tool Point
 	finishToolPoint(params)
@@ -840,10 +926,10 @@ class Point_1
 		this.countId.p = 0;
 		this.countId.w = 0;
 		
-		this.actTool = false;
-		
 		this.actFloorId = -1;		
 		this.settingFloor({type: 'add'});
+
+		this.actTool = false;
 		
 		console.log(this.floor);		
 	}
