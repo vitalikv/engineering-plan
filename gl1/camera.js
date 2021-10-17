@@ -386,7 +386,9 @@ class CameraOrbit
 		let zoom = camera2D.zoom - ( delta * 0.1 * ( camera2D.zoom / 2 ) );
 		
 		camera2D.zoom = zoom;
-		camera2D.updateProjectionMatrix();		
+		camera2D.updateProjectionMatrix();	
+
+		pointClass_1.pointScale();
 	}
 
 

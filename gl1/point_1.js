@@ -12,9 +12,13 @@ class Point_1
 		this.m_active = new THREE.MeshPhongMaterial( {color: 0xff0000, wireframe: false} );	
 
 		this.m_w_default = new THREE.MeshPhongMaterial( {color: 0xcccccc, wireframe: false} );
-				
-		this.lineAxis = this.initLineAxis();
-				
+		
+		this.line = {};
+		this.line.test = this.initLineAxis();
+		this.line.axis = {};
+		this.line.axis.horiz = this.initLineAxis();
+		this.line.axis.vert = this.initLineAxis();
+		
 		this.countId = {};
 		this.countId.p = 0;
 		this.countId.w = 0;
@@ -106,8 +110,8 @@ class Point_1
 		
 		for( let i = 0; i < attrP.array.length; i+=3 ) 
 		{
-			//attrP.array[i + 0] *= 0.5;		
-			//attrP.array[i + 2] *= 0.5;
+			attrP.array[i + 0] *= 0.5;	// x		
+			attrP.array[i + 2] *= 0.5;	// z
 			
 			let y = attrP.array[i + 1];
 			if(y < 0) { attrP.array[i + 1] = 0; }
@@ -115,9 +119,31 @@ class Point_1
 			
 		geometry.attributes.position.needsUpdate = true;
 		
+		geometry.userData.attrP = geometry.getAttribute('position').clone();
+		
 		return geometry;
 	}
-	
+
+	pointScale()
+	{
+		if(!this.geometry_1){ return; }
+		
+		let geometry = this.geometry_1;
+		
+		let attrP = geometry.userData.attrP;
+		let attrP_2 = [];
+		
+		for( let i = 0; i < attrP.array.length; i+=3 ) 
+		{
+			attrP_2[i + 0] = attrP.array[i + 0] / camOrbit.cam2D.zoom;	// x		
+			attrP_2[i + 2] = attrP.array[i + 2] / camOrbit.cam2D.zoom;	// z
+			
+			attrP_2[i + 1] = attrP.array[i + 1];	// y
+		}
+		
+		geometry.setAttribute( 'position', new THREE.BufferAttribute( new Float32Array(attrP_2), 3 ) );	
+		geometry.attributes.position.needsUpdate = true;
+	}		
 	
 	initLineAxis()
 	{
@@ -323,7 +349,7 @@ class Point_1
 		if(!rayhit) { return; }
 		
 		let joinP = rayhit.object.userData.point.joinP.map(o => o.userData.id)
-		console.log('clickScene', rayhit.object.userData.id, rayhit.object.userData.tag, joinP, rayhit.object.userData.point.joinW);
+		console.log('clickScene', rayhit.object.position, rayhit.object.userData.id, rayhit.object.userData.tag, joinP, rayhit.object.userData.point.joinW);
 
 		this.addEventPoint({obj: rayhit.object, rayPos: rayhit.point});	
 	}
@@ -452,6 +478,8 @@ class Point_1
 				container.onmousedown = null;  
 				this.actTool = false; 
 				
+				this.lineAxis({hide: true});
+				
 				if(e.button == 2)
 				{
 					this.deletePoint({obj: obj});
@@ -473,6 +501,7 @@ class Point_1
 				
 				this.finishSelectPoint({obj: obj});
 				
+				this.lineAxis({hide: true});
 				camOrbit.stopMove = false;
 			}
 			
@@ -504,10 +533,12 @@ class Point_1
 		obj.position.copy( pos );
 		
 		
-		
+		this.lineAxis({hide: true});
 		let newPos = this.nearPoint({obj: obj});
 		
 		if(!newPos) { newPos = this.crossPointOnWall({obj: obj, arrPW: arrPW}); }
+		
+		if(!newPos) { newPos = this.lineAxis({obj: obj}); }
 		
 		if(newPos) { obj.position.copy( newPos ); }
 		
@@ -563,8 +594,8 @@ class Point_1
 				
 				let geometry = new THREE.BufferGeometry().setFromPoints( [pos, pos2] );
 				
-				this.lineAxis.geometry.dispose();		
-				this.lineAxis.geometry = geometry;
+				this.line.test.geometry.dispose();		
+				this.line.test.geometry = geometry;
 				
 				newPos = pos2;
 				
@@ -575,6 +606,81 @@ class Point_1
 		return newPos;
 	}
 	
+
+	// направляющие X/Z к точекам
+	lineAxis(params)
+	{ 
+		
+		if(params.hide)
+		{
+			this.line.axis.horiz.visible = false;
+			this.line.axis.vert.visible = false;
+				
+			return;
+		}
+		
+		let obj = params.obj;
+		
+		let newPos = null;
+		let pos = obj.position.clone(); 
+		let arr = this.getActFloorArrPoint();
+		
+		let posAxis = {horiz: null, vert: null};
+		
+		for ( let i = 0; i < arr.length; i++ )
+		{
+			if(arr[i] == obj) { continue; }		 
+			
+			let pHoriz = custMath.spPoint(arr[i].position, new THREE.Vector3(1000,0,arr[i].position.z), pos);
+			let pVert = custMath.spPoint(arr[i].position, new THREE.Vector3(arr[i].position.x,0,1000), pos);
+			
+			let horiz = Math.abs( pos.z - pHoriz.z );
+			let vert = Math.abs( pos.x - pVert.x );
+			
+			if(horiz < 0.06 / camOrbit.cam2D.zoom) { posAxis.horiz = pHoriz; }
+			if(vert < 0.06 / camOrbit.cam2D.zoom) { posAxis.vert = pVert; }	
+			
+			
+			if(posAxis.horiz && posAxis.vert) { break; }			
+		}
+		
+		
+		if(posAxis.horiz || posAxis.vert) { newPos = pos.clone(); }
+		
+		
+		if(posAxis.horiz)
+		{
+			let line = this.line.axis.horiz;
+			let p1 = new THREE.Vector3(-1000, 0, posAxis.horiz.z);
+			let p2 = new THREE.Vector3(1000, 0, posAxis.horiz.z);
+			
+			let geometry = new THREE.BufferGeometry().setFromPoints( [p1, p2] );
+			
+			line.geometry.dispose();		
+			line.geometry = geometry;
+			line.visible = true;
+			
+			newPos.z = posAxis.horiz.z;
+		}
+		
+		if(posAxis.vert)
+		{
+			let line = this.line.axis.vert;
+			let p1 = new THREE.Vector3(posAxis.vert.x, 0, -1000);
+			let p2 = new THREE.Vector3(posAxis.vert.x, 0, 1000);
+			
+			let geometry = new THREE.BufferGeometry().setFromPoints( [p1, p2] );
+			
+			line.geometry.dispose();		
+			line.geometry = geometry;
+			line.visible = true;
+			
+			newPos.x = posAxis.vert.x;
+		}
+
+
+		return newPos;
+	}
 	
 
 	// закончили действия с Tool Point
