@@ -327,6 +327,22 @@ class Point_1
 		return this.floor[this.actFloorId].pps;
 	}
 	
+
+	getActFloorArrWall()
+	{
+		let arrW = [];
+		let arr = this.getActFloorArrPoint();
+		for ( let i = 0; i < arr.length; i++ )
+		{
+			arrW.push(...arr[i].userData.point.joinW);
+		}
+		
+		arrW = [...new Set(arrW)];
+		
+		return arrW;
+	}
+	
+	
 	// кликнули куда-то в сцену
 	clickScene(event)
 	{ 
@@ -592,12 +608,13 @@ class Point_1
 			{	
 				if(new THREE.Vector2(pos.x, pos.z).distanceTo( new THREE.Vector2(pos2.x, pos2.z) ) > 0.2 / camOrbit.cam2D.zoom) { continue; }
 				
-				let geometry = new THREE.BufferGeometry().setFromPoints( [pos, pos2] );
+				let geometry = new THREE.BufferGeometry().setFromPoints( [pos, new THREE.Vector3(pos2.x, pos.y, pos2.z)] );
 				
 				this.line.test.geometry.dispose();		
 				this.line.test.geometry = geometry;
 				
 				newPos = pos2;
+				newPos.y = pos.y;
 				
 				break;
 			}			
@@ -690,6 +707,7 @@ class Point_1
 		
 		let o = this.rayFromPointToObj({obj: obj, arr: this.getActFloorArrPoint()});  
 		
+		// точка состыковалась с точкой
 		if(o)
 		{
 			camOrbit.stopMove = false;	
@@ -722,7 +740,15 @@ class Point_1
 				}							
 			}			
 		}
-		else
+		
+		let w = null;
+		
+		if(!o)
+		{			
+			w = this.divideWall({obj: obj, tool: true});
+		}
+		
+		if(!o && !w)
 		{
 			this.floor[this.actFloorId].pps.push(obj);
 			this.crPoint({pos: obj.position.clone(), cursor: true, tool: true, joinP: [obj]});							
@@ -737,7 +763,7 @@ class Point_1
 		
 		let o = this.rayFromPointToObj({obj: obj, arr: this.getActFloorArrPoint()});  
 		
-		// удаляем перетаскиваемую точку и заменяем ее на ту, с которой она пересклась 
+		// точка состыковалась с точкой
 		if(o)
 		{
 			
@@ -782,6 +808,10 @@ class Point_1
 				this.deletePoint({obj: o});
 			}				
 		}
+		else
+		{
+			this.divideWall({obj: obj});
+		}
 	}	
 	
 	// пускаем луч из точки на что-то в сцене
@@ -825,7 +855,8 @@ class Point_1
 		let obj = new THREE.Mesh( new THREE.BufferGeometry(), this.m_w_default );	
 
 		if(id == undefined) { id = this.countId.w; this.countId.w++; }	
-		obj.userData.id = id;	
+		obj.userData.id = id;
+		obj.userData.tag = 'wall';		
 		obj.userData.active = false;		
 		
 		obj.userData.click = {};
@@ -897,6 +928,70 @@ class Point_1
 		return geometry;
 	}
 	
+	
+	// если точка пересеклась со стеной, то делим стену
+	divideWall(params)
+	{
+		let obj = params.obj;
+		let tool = params.tool;
+		
+		let arr = [];		
+		let arrW = this.getActFloorArrWall();
+		let jW = obj.userData.point.joinW;
+
+		for ( let i = 0; i < arrW.length; i++ )
+		{
+			let add = true;
+			
+			for ( let i2 = 0; i2 < jW.length; i2++ )
+			{
+				if(arrW[i] == jW[i2]) { add = false; continue; }					
+			}				
+			
+			if(add) arr.push(arrW[i]);
+		}
+		
+
+		let wall = this.rayFromPointToObj({obj: obj, arr: arr});
+			
+		if(wall)
+		{
+			let count = jW.length;
+			
+			let p = wall.userData.w.joinP;
+
+			this.deleteValueFromArrya({arr: p[0].userData.point.joinP, obj: p[1]});
+			this.deleteValueFromArrya({arr: p[1].userData.point.joinP, obj: p[0]});
+			
+			this.deleteValueFromArrya({arr: p[0].userData.point.joinW, obj: wall});
+			this.deleteValueFromArrya({arr: p[1].userData.point.joinW, obj: wall});
+			
+			wall.geometry.dispose();
+			scene.remove( wall );
+
+
+			for ( let i = 0; i < p.length; i++ )
+			{ 
+				obj.userData.point.joinP.push(p[i]);
+				p[i].userData.point.joinP.push(obj);
+
+				this.crWall({p1: obj, p2: p[i]});
+			}
+
+			if(tool) { this.floor[this.actFloorId].pps.push(obj); }
+			
+			if(count == 0 && tool)
+			{ 
+				this.crPoint({pos: obj.position.clone(), cursor: true, tool: true, joinP: [obj]});
+			}
+			else 
+			{ 
+				camOrbit.stopMove = false;
+			}				
+		}
+
+		return wall;
+	}
 	
 
 	deActivePoint(params)
