@@ -11,7 +11,7 @@ class Point_1
 		this.m_p_default = new THREE.MeshPhongMaterial( {color: 0x222222, depthTest: false, transparent: true, wireframe: false} );
 		this.m_active = new THREE.MeshPhongMaterial( {color: 0xff0000, wireframe: false} );	
 
-		this.m_w_default = new THREE.MeshPhongMaterial( {color: 0xcccccc, wireframe: false} );
+		this.m_w_default = new THREE.MeshPhongMaterial( {color: 0xe3e3e5, wireframe: false} );
 		
 		this.line = {};
 		this.line.test = this.initLineAxis();
@@ -23,18 +23,18 @@ class Point_1
 		this.countId.p = 0;
 		this.countId.w = 0;
 		
-		this.floor = [];		
-		this.actFloorId = -1;		
+		this.level = [];		
+		this.actLevelId = -1;		
 		this.actTool = false;
 		
 		this.initEvent();
 
 		this.el = {};
-		this.el.blockFloor = document.querySelector('[nameId="blockFloorLevel"]');
-		this.el.listFloor = null;
-		this.el.addItemFloor = null;
+		this.el.wrapLevel = document.querySelector('[nameId="wrapLevel"]');
+		this.el.listLevel = null;
+		this.el.addItemLevel = null;
 
-		this.initFloorHtml();
+		this.initLevelHtml();
 		this.resetScene();
 	}
 	
@@ -160,7 +160,7 @@ class Point_1
 		let rayIntersect = this.rayIntersect.bind(this);
 		
 		let planeMath = this.planeMath;
-		planeMath.position.set( 0, this.floor[this.actFloorId].h1, 0 );
+		planeMath.position.set( 0, this.level[this.actLevelId].h1, 0 );
 		planeMath.rotation.set(-Math.PI/2, 0, 0);
 		planeMath.updateMatrixWorld();
 		
@@ -180,13 +180,13 @@ class Point_1
 		});
 	}	
 	
-	initFloorHtml()
+	initLevelHtml()
 	{
 		let html = 
 		`<div nameId="rp_plane_1" style="height: 250px; margin: auto 10px; border: 1px solid #ccc; border-radius: 3px; background-color: #fff;">
-			<div nameId="listFloor">
+			<div nameId="listLevel">
 			</div>
-			<div nameId="addItemFloor" style="display: flex; margin: 3px 0; padding: 3px; border: 1px solid #ccc; background: #ffffff; cursor: pointer;">	
+			<div nameId="addItemLevel" style="display: flex; margin: 3px 0; padding: 3px; border: 1px solid #ccc; background: #ffffff; cursor: pointer;">	
 				<div style="margin: auto 20px; font-family: arial,sans-serif; font-size: 15px; color: #666; text-decoration: none;"> + </div>	
 			</div>					
 		</div>`;
@@ -194,42 +194,42 @@ class Point_1
 		let div = document.createElement('div');
 		div.innerHTML = html;
 		let elem = div.firstChild;			
-		this.el.blockFloor.append(elem);
+		this.el.wrapLevel.append(elem);
 
-		this.el.listFloor = elem.querySelector('[nameId="listFloor"]');
-		this.el.addItemFloor = elem.querySelector('[nameId="addItemFloor"]');
+		this.el.listLevel = elem.querySelector('[nameId="listLevel"]');
+		this.el.addItemLevel = elem.querySelector('[nameId="addItemLevel"]');
 
-		this.el.addItemFloor.onmousedown =()=> 
+		this.el.addItemLevel.onmousedown =()=> 
 		{ 
-			this.settingFloor({type: 'add'}); 
+			this.settingLevel({type: 'add'}); 
 		}		
 	}
 
 	
-	settingFloor(params)
+	settingLevel(params)
 	{
 		
-		let setActiveFloor =(params)=>
+		let addItemLevel =(params)=>
 		{
-			this.actFloorId = params.id;
-			selectItemFloor();			
+			this.actLevelId = params.id;
+			selectItemLevel();			
 		}
 		
-		let addFloor =()=>
+		let addLevel =()=>
 		{
-			let n = this.floor.length;
+			let n = this.level.length;
 			
-			this.floor[n] = {};
-			this.floor[n].pps = [];
-			this.floor[n].h1 = (n == 0) ? 0 : this.floor[n - 1].h2;
-			this.floor[n].h2 = this.floor[n].h1 + 3;
-			this.floor[n].el = null;
+			this.level[n] = {};
+			this.level[n].pps = [];
+			this.level[n].h1 = (n == 0) ? 0 : this.level[n - 1].h2;
+			this.level[n].h2 = this.level[n].h1 + 3;
+			this.level[n].el = null;
 			
-			this.actFloorId = n;
+			this.actLevelId = n;
 
-			let createItemFloor =(params)=>
+			let createItemLevel =(params)=>
 			{
-				let id = this.actFloorId;
+				let id = this.actLevelId;
 				
 				let html = 		
 				`<div style="display: flex; margin: 3px 0; padding: 3px; border: 1px solid #ccc; background: #ffffff; cursor: pointer;">
@@ -242,96 +242,96 @@ class Point_1
 				let div = document.createElement('div');
 				div.innerHTML = html;
 				let elem = div.firstChild;			
-				this.el.listFloor.append(elem);
+				this.el.listLevel.append(elem);
 			
-				elem.onmousedown =()=> { setActiveFloor({id: id}); }
+				elem.onmousedown =()=> { addItemLevel({id: id}); }
 				
 				let el_delete = elem.querySelector('[nameId="delete"]');		
-				el_delete.onmousedown =(e)=> { deleteFloor(); e.stopPropagation(); }
+				el_delete.onmousedown =(e)=> { deleteLevel(); e.stopPropagation(); }
 			
-				this.floor[id].el = elem;
+				this.level[id].el = elem;
 			}
 	
-			createItemFloor();
-			upItemFloor();
-			selectItemFloor();			
+			createItemLevel();
+			upItemLevel();
+			selectItemLevel();			
 		}
 
-		let deleteFloor =(params)=>
+		let deleteLevel =(params)=>
 		{
 			if(!params) params = {};
 			
 			let execute = false;
 			
 			if(params.reset) { execute = true; }
-			if(this.floor.length > 1) { execute = true; }
+			if(this.level.length > 1) { execute = true; }
 			
 			if(execute) 
 			{
-				let n = this.floor.length - 1;
+				let n = this.level.length - 1;
 				
-				this.floor[n].el.remove();
+				this.level[n].el.remove();
 
-				for( let i = this.floor[n].pps.length - 1; i >= 0; i-- )
+				for( let i = this.level[n].pps.length - 1; i >= 0; i-- )
 				{ 
-					this.deletePoint({obj: this.floor[n].pps[i], reset: true});		
+					this.deletePoint({obj: this.level[n].pps[i], reset: true});		
 				}		
 				
-				this.floor.pop();
+				this.level.pop();
 			}
 
-			this.actFloorId = this.floor.length - 1;
+			this.actLevelId = this.level.length - 1;
 			
-			upItemFloor();
-			selectItemFloor();			
+			upItemLevel();
+			selectItemLevel();			
 		}
 
-		let selectItemFloor =()=>
+		let selectItemLevel =()=>
 		{			
-			this.floor.forEach(item => item.el.style.backgroundColor = '#fff' )
+			this.level.forEach(item => item.el.style.backgroundColor = '#fff' )
 			
-			if(this.actFloorId > -1)
+			if(this.actLevelId > -1)
 			{
-				this.floor[this.actFloorId].el.style.backgroundColor = 'rgb(167, 207, 242)';
+				this.level[this.actLevelId].el.style.backgroundColor = 'rgb(167, 207, 242)';
 			}					
 		}
 		
-		let upItemFloor =()=>
+		let upItemLevel =()=>
 		{			
-			for( let i = 0; i < this.floor.length; i++ )
+			for( let i = 0; i < this.level.length; i++ )
 			{
-				let el = this.floor[i].el.querySelector('[nameId="delete"]');			
+				let el = this.level[i].el.querySelector('[nameId="delete"]');			
 				el.onmousedown =(e)=> {  }
 				el.style.display = 'none';
 			}
 			
-			if(this.floor.length > 1)
+			if(this.level.length > 1)
 			{
-				let n = this.floor.length - 1;
-				let el = this.floor[n].el.querySelector('[nameId="delete"]');
-				el.onmousedown =(e)=> { deleteFloor(); e.stopPropagation(); }
+				let n = this.level.length - 1;
+				let el = this.level[n].el.querySelector('[nameId="delete"]');
+				el.onmousedown =(e)=> { deleteLevel(); e.stopPropagation(); }
 				el.style.display = '';
 			}			
 		}		
 		
-		if(params.type == 'setActiveFloor') { setActiveFloor({id: params.id}); }
-		if(params.type == 'add') { addFloor(); }
-		if(params.type == 'delete') { deleteFloor(params); }
+		if(params.type == 'addItemLevel') { addItemLevel({id: params.id}); }
+		if(params.type == 'add') { addLevel(); }
+		if(params.type == 'delete') { deleteLevel(params); }
 		
-		console.log(this.actFloorId);
+		console.log(this.actLevelId);
 	}
 	
 	
-	getActFloorArrPoint()
+	getActLevelArrPoint()
 	{
-		return this.floor[this.actFloorId].pps;
+		return this.level[this.actLevelId].pps;
 	}
 	
 
-	getActFloorArrWall()
+	getActLevelArrWall()
 	{
 		let arrW = [];
-		let arr = this.getActFloorArrPoint();
+		let arr = this.getActLevelArrPoint();
 		for ( let i = 0; i < arr.length; i++ )
 		{
 			arrW.push(...arr[i].userData.point.joinW);
@@ -350,13 +350,13 @@ class Point_1
 		if(this.actTool) return;
 		
 		this.activePoint({obj: null});
-		this.deActivePoint({arr: this.getActFloorArrPoint()});
+		this.deActivePoint({arr: this.getActLevelArrPoint()});
 		
 		let rayhit = null;		
 		
 		if(1 == 1)
 		{ 
-			let ray = this.rayIntersect( event, this.getActFloorArrPoint(), 'arr' );
+			let ray = this.rayIntersect( event, this.getActLevelArrPoint(), 'arr' );
 			if(!rayhit) { if(ray.length > 0) { rayhit = ray[0]; } }		
 		}	
 
@@ -420,7 +420,7 @@ class Point_1
 		
 		if(!tool)
 		{	
-			this.floor[this.actFloorId].pps.push(obj);
+			this.level[this.actLevelId].pps.push(obj);
 		}
 		
 		if(cursor) 
@@ -443,7 +443,7 @@ class Point_1
 
 		//------
 		let arrPW = [];
-		let arr = this.getActFloorArrPoint();
+		let arr = this.getActLevelArrPoint();
 		for ( let i = 0; i < arr.length; i++ )
 		{
 			if(arr[i] == obj) { continue; }
@@ -570,7 +570,7 @@ class Point_1
 		
 		let newPos = null;
 		let pos = obj.position.clone(); 
-		let arr = this.getActFloorArrPoint();
+		let arr = this.getActLevelArrPoint();
 		
 		for ( let i = 0; i < arr.length; i++ )
 		{
@@ -640,7 +640,7 @@ class Point_1
 		
 		let newPos = null;
 		let pos = obj.position.clone(); 
-		let arr = this.getActFloorArrPoint();
+		let arr = this.getActLevelArrPoint();
 		
 		let posAxis = {horiz: null, vert: null};
 		
@@ -705,7 +705,7 @@ class Point_1
 	{
 		let obj = params.obj;
 		
-		let o = this.rayFromPointToObj({obj: obj, arr: this.getActFloorArrPoint()});  
+		let o = this.rayFromPointToObj({obj: obj, arr: this.getActLevelArrPoint()});  
 		
 		// точка состыковалась с точкой
 		if(o)
@@ -728,7 +728,7 @@ class Point_1
 				w[0].geometry.dispose();
 				scene.remove( w[0] );				
 				
-				this.deleteValueFromArrya({arr: this.getActFloorArrPoint(), obj: obj});
+				this.deleteValueFromArrya({arr: this.getActLevelArrPoint(), obj: obj});
 				scene.remove( obj );
 
 				if(1 == 1)
@@ -750,7 +750,7 @@ class Point_1
 		
 		if(!o && !w)
 		{
-			this.floor[this.actFloorId].pps.push(obj);
+			this.level[this.actLevelId].pps.push(obj);
 			this.crPoint({pos: obj.position.clone(), cursor: true, tool: true, joinP: [obj]});							
 		}
 	}
@@ -761,7 +761,7 @@ class Point_1
 	{
 		let obj = params.obj;
 		
-		let o = this.rayFromPointToObj({obj: obj, arr: this.getActFloorArrPoint()});  
+		let o = this.rayFromPointToObj({obj: obj, arr: this.getActLevelArrPoint()});  
 		
 		// точка состыковалась с точкой
 		if(o)
@@ -785,7 +785,7 @@ class Point_1
 			obj.userData.point.joinP = [];
 			obj.userData.point.joinW = [];			
 			
-			this.deleteValueFromArrya({arr: this.getActFloorArrPoint(), obj: obj});
+			this.deleteValueFromArrya({arr: this.getActLevelArrPoint(), obj: obj});
 			scene.remove( obj );
 
 			for( let i = 0; i < p.length; i++ )
@@ -936,7 +936,7 @@ class Point_1
 		let tool = params.tool;
 		
 		let arr = [];		
-		let arrW = this.getActFloorArrWall();
+		let arrW = this.getActLevelArrWall();
 		let jW = obj.userData.point.joinW;
 
 		for ( let i = 0; i < arrW.length; i++ )
@@ -978,7 +978,7 @@ class Point_1
 				this.crWall({p1: obj, p2: p[i]});
 			}
 
-			if(tool) { this.floor[this.actFloorId].pps.push(obj); }
+			if(tool) { this.level[this.actLevelId].pps.push(obj); }
 			
 			if(count == 0 && tool)
 			{ 
@@ -1017,7 +1017,7 @@ class Point_1
 		}
 		else
 		{
-			let arr = this.getActFloorArrPoint();
+			let arr = this.getActLevelArrPoint();
 			
 			for( let i = 0; i < arr.length; i++ )
 			{
@@ -1046,7 +1046,7 @@ class Point_1
 		
 		if(active)
 		{
-			let arr = this.getActFloorArrPoint();
+			let arr = this.getActLevelArrPoint();
 			
 			for( let i = 0; i < arr.length; i++ )
 			{
@@ -1097,7 +1097,7 @@ class Point_1
 		{
 			if(arr[i].userData.point.joinP.length > 0) continue;
 			
-			this.deleteValueFromArrya({arr: this.getActFloorArrPoint(), obj: arr[i]});
+			this.deleteValueFromArrya({arr: this.getActLevelArrPoint(), obj: arr[i]});
 			scene.remove( arr[i] );
 		}			
 		
@@ -1117,22 +1117,22 @@ class Point_1
 	
 	resetScene()
 	{
-		let n = this.floor.length;
+		let n = this.level.length;
 		
 		for( let i = n - 1; i >= 0; i-- )
 		{
-			this.settingFloor({type: 'delete', reset: true});		
+			this.settingLevel({type: 'delete', reset: true});		
 		}				
 	
 		this.countId.p = 0;
 		this.countId.w = 0;
 		
-		this.actFloorId = -1;		
-		this.settingFloor({type: 'add'});
+		this.actLevelId = -1;		
+		this.settingLevel({type: 'add'});
 
 		this.actTool = false;
 		
-		console.log(this.floor);		
+		console.log(this.level);		
 	}
 
 	async saveFile(params)
@@ -1170,22 +1170,22 @@ class Point_1
 	savePoint()
 	{			
 		let json = {};
-		json.floor = [];
+		json.level = [];
 		
-		for( let i = 0; i < this.floor.length; i++ )
+		for( let i = 0; i < this.level.length; i++ )
 		{
-			let f = this.floor[i];
+			let f = this.level[i];
 			
-			json.floor[i] = {};
-			json.floor[i].point = [];
+			json.level[i] = {};
+			json.level[i].point = [];
 			
 			for( let i2 = 0; i2 < f.pps.length; i2++ )
 			{ 
-				json.floor[i].point[i2] = {};
-				json.floor[i].point[i2].id = f.pps[i2].userData.id;
-				json.floor[i].point[i2].pos = f.pps[i2].position;
+				json.level[i].point[i2] = {};
+				json.level[i].point[i2].id = f.pps[i2].userData.id;
+				json.level[i].point[i2].pos = f.pps[i2].position;
 				
-				json.floor[i].point[i2].joinP = f.pps[i2].userData.point.joinP.map(o => o.userData.id);		
+				json.level[i].point[i2].joinP = f.pps[i2].userData.point.joinP.map(o => o.userData.id);		
 			}			
 		}
 		
@@ -1228,13 +1228,13 @@ class Point_1
 		let json = params.json;
 		let maxId = -1;
 		
-		for( let i = 0; i < json.floor.length; i++ )
+		for( let i = 0; i < json.level.length; i++ )
 		{
-			let f = json.floor[i];
+			let f = json.level[i];
 			
 			if(i > 0) 
 			{ 
-				this.settingFloor({type: 'add'});
+				this.settingLevel({type: 'add'});
 			}
 			
 			for( let i2 = 0; i2 < f.point.length; i2++ )
@@ -1243,7 +1243,7 @@ class Point_1
 				
 				let pos = new THREE.Vector3(point.pos.x, point.pos.y, point.pos.z);
 				
-				let joinP = point.joinP.map(id => { return this.findObj({arr: this.getActFloorArrPoint(), id: id}); })			
+				let joinP = point.joinP.map(id => { return this.findObj({arr: this.getActLevelArrPoint(), id: id}); })			
 				
 				let o = this.crPoint({id: point.id, pos: pos, joinP: joinP});
 
@@ -1251,7 +1251,10 @@ class Point_1
 			}			
 		}
 		
-		this.settingFloor({type: 'setActiveFloor', id: 0});
+		
+		detectRoomZone();
+		
+		this.settingLevel({type: 'addItemLevel', id: 0});
 		//let arrId = json.point.map(o => o.id);
 		//let maxId = Math.max(...arrId);
 		
@@ -1302,19 +1305,14 @@ class Point_1
 
 let listActFucn =
 {
-	addFloor() 
+	addLevel() 
 	{
-		pointClass_1.settingFloor({type: 'add'});
+		pointClass_1.settingLevel({type: 'add'});
 	},
 	
-	selectFloor(params)
+	deleteLevel()
 	{
-		pointClass_1.settingFloor({type: 'setActiveFloor', id: params.id});
-	},
-	
-	deleteFloor()
-	{
-		pointClass_1.settingFloor({type: 'delete'});		
+		pointClass_1.settingLevel({type: 'delete'});		
 	}	
 }
 
@@ -1329,7 +1327,225 @@ function funcToFucn(name, params)
 
 
 
+// создаем пол 
+function detectRoomZone()
+{		
+	let arrFC = [];
+	let level = pointClass_1.level[0];
+	
+	let arrP = level.pps;
+	//let arrP = [level.pps[0]];
+	for( let i = 0; i < arrP.length; i++ )
+	{ 
+		let p1 = arrP[i];
+		let joinP = p1.userData.point.joinP;
+		
+		for( let i2 = 0; i2 < joinP.length; i2++ )
+		{
+			let p2 = joinP[i2];
+			
+			if(p2.userData.point.joinP.length < 2) continue;
+			
+			let arr = getContour({arr: [p1], point: p2});
 
+			if(arr.length == 0) continue;
+			if(arr[0] != arr[arr.length - 1]) continue;	
+			if(checkClockWise( arr ) <= 0) continue;
+			if(detectSameZone({arrP: arr, arrFC: arrFC})) continue;
+			
+			let obj = crFloor({arrP: arr});
+			
+			arrFC.push(obj);
+			
+			let arrP2_id = arr.map(o => o.userData.id);
+			console.log(arrP2_id);
+		}
+
+	}
+
+	
+	// ищем замкнутый контур
+	function getContour(params)
+	{
+		let arr = params.arr;
+		let pNew = params.point;
+		
+		let pPrev = arr[arr.length - 1];
+		arr[arr.length] = pNew;
+		
+		let arrD = [];
+		let dir1 = new THREE.Vector3().subVectors( pNew.position, pPrev.position ).normalize();	
+		
+		for( let i = 0; i < pNew.userData.point.joinP.length; i++ )
+		{
+			let pNext = pNew.userData.point.joinP[i];
+			
+			if(pNext == pPrev) continue;		
+			if(pNext.userData.point.joinP.length < 2) continue;
+			
+			let dir2 = new THREE.Vector3().subVectors( pNext.position, pNew.position ).normalize();
+			
+			
+			let d = (pNext.position.x - pPrev.position.x) * (pNew.position.z - pPrev.position.z) - (pNext.position.z - pPrev.position.z) * (pNew.position.x - pPrev.position.x);
+			
+			let angle = dir1.angleTo( dir2 );
+			
+			if(d > 0){ angle *= -1; }
+			//console.log(THREE.MathUtils.radToDeg(angle));
+			arrD[arrD.length] = { point: pNext, angle: angle};
+			
+			if(!custMath.isNumeric(angle)) { return arr; }
+		}	
+		
+		
+		if(arrD.length > 0)
+		{ 
+			arrD.sort(function (a, b) { return a.angle - b.angle; });
+			
+			if(arr[0] != arrD[0].point) 
+			{ 
+				arr = getContour({arr: arr, point: arrD[0].point}); 
+			}
+			else 
+			{ 
+				arr[arr.length] = arrD[0].point; 
+			}						
+		}
+		else
+		{
+			arr = [];
+		}
+		
+		return arr;
+	}
+
+
+	//площадь многоугольника (нужно чтобы понять положительное значение или отрецательное, для того чтобы понять напрвление по часовой или проитв часовой)
+	function checkClockWise( arrP )
+	{  
+		let res = 0;
+		let n = arrP.length;
+		let p1, p2, p3;
+		
+		for (i = 0; i < n; i++) 
+		{
+			p1 = arrP[i].position;
+			
+			if (i == 0)
+			{
+				p2 = arrP[n-1].position;
+				p3 = arrP[i+1].position;					
+			}
+			else if (i == n-1)
+			{
+				p2 = arrP[i-1].position;
+				p3 = arrP[0].position;			
+			}
+			else
+			{
+				p2 = arrP[i-1].position;
+				p3 = arrP[i+1].position;			
+			}
+			
+			res += p1.x * (p2.z - p3.z);
+		}
+		
+		
+		res = res / 2;
+		res = Math.round(res * 10) / 10;
+		
+		return res;
+	}
+
+
+	// проверяем если зона с такими же точками
+	function detectSameZone(params)
+	{
+		let arrP = params.arrP;
+		let arrFC = params.arrFC;
+		let exsist = false;
+		
+		for( let i = 0; i < arrFC.length; i++ )
+		{
+			let arr = arrFC[i].userData.flrr.arrP;
+			
+			if(arr.length !== arr.length) continue;
+			
+			let count = 0;
+			
+			for( let i2 = 0; i2 < arr.length - 1; i2++ )
+			{
+				for( let i3 = 0; i3 < arrP.length - 1; i3++ )
+				{
+					if(arr[i2] == arrP[i3])
+					{
+						count++;
+						break;
+					}
+				}			
+			}
+						
+			if(count == arrP.length - 1) 
+			{  
+				exsist = true; 
+				break; 
+			}
+			
+			console.log(i, count, arrP.length - 1);
+		}
+		
+		return exsist;
+	}
+
+
+
+	function crFloor(params)
+	{
+		let id = params.id;					
+		
+		let color = new THREE.Color( 0xffffff ).setHex( Math.random() * 0xffffff );
+		
+		let obj = new THREE.Mesh( new THREE.BufferGeometry(), new THREE.MeshPhongMaterial({color: color, wireframe: false}) );	
+
+		//if(id == undefined) { id = this.countId.w; this.countId.w++; }	
+		//obj.userData.id = id;
+		obj.userData.tag = 'flrr';	
+		obj.userData.flrr = {};
+		
+		obj.userData.flrr.arrP = params.arrP;				
+		//obj.userData.active = false;		
+
+		updateGeomFloor({obj: obj});
+		
+		scene.add( obj );		
+		
+		render();
+		
+		return obj;
+	}
+	
+	
+	function updateGeomFloor(params)
+	{
+		let obj = params.obj;
+		obj.geometry.dispose();
+		
+		let arrP = obj.userData.flrr.arrP;
+		let arr = [];
+		
+		for( let i = 0; i < arrP.length - 1; i++ ) 
+		{  
+			arr[i] = new THREE.Vector2( arrP[i].position.x, arrP[i].position.z );		
+		}	
+		
+		let shape = new THREE.Shape( arr );
+		let geometry = new THREE.ExtrudeGeometry( shape, { bevelEnabled: false, depth: 0.05 } );
+		geometry.rotateX(Math.PI/2);
+		
+		obj.geometry = geometry;
+	}
+
+}
 
 
 
