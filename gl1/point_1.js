@@ -517,6 +517,8 @@ class Point_1
 				
 				this.finishSelectPoint({obj: obj});
 				
+				detectRoomZone({type: 'upGeomFloor', point: obj});
+				
 				this.lineAxis({hide: true});
 				camOrbit.stopMove = false;
 			}
@@ -1252,7 +1254,7 @@ class Point_1
 		}
 		
 		
-		detectRoomZone();
+		detectRoomZone({type: 'crLevelFloor'});
 		
 		this.settingLevel({type: 'addItemLevel', id: 0});
 		//let arrId = json.point.map(o => o.id);
@@ -1326,41 +1328,48 @@ function funcToFucn(name, params)
 
 
 
-
+let arrFC = [];
 // создаем пол 
-function detectRoomZone()
-{		
-	let arrFC = [];
-	let level = pointClass_1.level[0];
-	
-	let arrP = level.pps;
-	//let arrP = [level.pps[0]];
-	for( let i = 0; i < arrP.length; i++ )
-	{ 
-		let p1 = arrP[i];
-		let joinP = p1.userData.point.joinP;
+function detectRoomZone(params)
+{
+	let type = params.type;
 		
-		for( let i2 = 0; i2 < joinP.length; i2++ )
-		{
-			let p2 = joinP[i2];
+	
+	if(type == 'crLevelFloor') { crLevelFloor(); }
+	if(type == 'upGeomFloor') { upGeomFloor({point: params.point}); }
+	
+	function crLevelFloor()
+	{
+		let level = pointClass_1.level[0];
+		
+		let arrP = level.pps;
+		//let arrP = [level.pps[0]];
+		for( let i = 0; i < arrP.length; i++ )
+		{ 
+			let p1 = arrP[i];
+			let joinP = p1.userData.point.joinP;
 			
-			if(p2.userData.point.joinP.length < 2) continue;
-			
-			let arr = getContour({arr: [p1], point: p2});
+			for( let i2 = 0; i2 < joinP.length; i2++ )
+			{
+				let p2 = joinP[i2];
+				
+				if(p2.userData.point.joinP.length < 2) continue;
+				
+				let arr = getContour({arr: [p1], point: p2});
 
-			if(arr.length == 0) continue;
-			if(arr[0] != arr[arr.length - 1]) continue;	
-			if(checkClockWise( arr ) <= 0) continue;
-			if(detectSameZone({arrP: arr, arrFC: arrFC})) continue;
-			
-			let obj = crFloor({arrP: arr});
-			
-			arrFC.push(obj);
-			
-			let arrP2_id = arr.map(o => o.userData.id);
-			console.log(arrP2_id);
-		}
-
+				if(arr.length == 0) continue;
+				if(arr[0] != arr[arr.length - 1]) continue;	
+				if(checkClockWise( arr ) <= 0) continue;
+				if(detectSameZone({arrP: arr, arrFC: arrFC})) continue;
+				
+				let obj = crFloor({arrP: arr});
+				
+				arrFC.push(obj);
+				
+				let arrP2_id = arr.map(o => o.userData.id);
+				console.log(arrP2_id);
+			}
+		}		
 	}
 
 	
@@ -1544,6 +1553,31 @@ function detectRoomZone()
 		
 		obj.geometry = geometry;
 	}
+
+
+
+	function upGeomFloor(params)
+	{
+		let point = params.point;
+		
+		for( let i = 0; i < arrFC.length; i++ )
+		{
+			let arrP = arrFC[i].userData.flrr.arrP;
+			
+			let ind = arrP.findIndex(o => o == point);
+			
+			if(ind > -1)
+			{
+				updateGeomFloor({obj: arrFC[i]});
+				
+				let arrP2_id = arrP.map(o => o.userData.id);
+				console.log(arrP2_id);
+			}
+		}
+		
+		render();
+	}
+
 
 }
 
