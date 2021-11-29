@@ -365,7 +365,7 @@ class Point_1
 		if(!rayhit) { return; }
 		
 		let joinP = rayhit.object.userData.point.joinP.map(o => o.userData.id)
-		console.log('clickScene', rayhit.object.position, rayhit.object.userData.id, rayhit.object.userData.tag, joinP, rayhit.object.userData.point.joinW);
+		console.log('clickScene', rayhit.object.userData.id, rayhit.object.userData.tag, joinP, rayhit.object.userData.point.joinW);
 
 		this.addEventPoint({obj: rayhit.object, rayPos: rayhit.point});	
 	}
@@ -470,7 +470,7 @@ class Point_1
 				if(add) arrPW.push( [arr[i], joinP[i2]] );
 			}
 		}
-		console.log(arrPW);
+		
 		//------
 		
 			
@@ -498,7 +498,7 @@ class Point_1
 				
 				if(e.button == 2)
 				{
-					this.deletePoint({obj: obj});
+					this.deletePoint({obj: obj, buttonRight: true});
 					
 					camOrbit.stopMove = false;
 				}
@@ -517,7 +517,7 @@ class Point_1
 				
 				this.finishSelectPoint({obj: obj});
 				
-				detectRoomZone({type: 'upGeomFloor', point: obj});
+				detectRoomZone({type: 'changeFormFloor', point: obj});
 				
 				this.lineAxis({hide: true});
 				camOrbit.stopMove = false;
@@ -755,6 +755,12 @@ class Point_1
 			this.level[this.actLevelId].pps.push(obj);
 			this.crPoint({pos: obj.position.clone(), cursor: true, tool: true, joinP: [obj]});							
 		}
+		
+		if(o || w)
+		{ 
+			detectRoomZone({type: 'deleteFloors'});
+			detectRoomZone({type: 'crLevelFloor'});			
+		}
 	}
 	
 	
@@ -764,6 +770,7 @@ class Point_1
 		let obj = params.obj;
 		
 		let o = this.rayFromPointToObj({obj: obj, arr: this.getActLevelArrPoint()});  
+		let w2 = null;
 		
 		// точка состыковалась с точкой
 		if(o)
@@ -806,13 +813,19 @@ class Point_1
 			}
 
 			if(o.userData.point.joinP.length == 0)
-			{
+			{				
 				this.deletePoint({obj: o});
 			}				
 		}
 		else
 		{
-			this.divideWall({obj: obj});
+			w2 = this.divideWall({obj: obj});
+		}
+		
+		if(o || w2)
+		{
+			detectRoomZone({type: 'deleteFloors'});
+			detectRoomZone({type: 'crLevelFloor'});				
 		}
 	}	
 	
@@ -1040,7 +1053,7 @@ class Point_1
 	}
 	
 	
-	deletePoint(params)
+	deletePoint(params = {})
 	{
 		let active = params.active;
 		let obj = params.obj;
@@ -1103,6 +1116,11 @@ class Point_1
 			scene.remove( arr[i] );
 		}			
 		
+		if(!params.buttonRight)
+		{
+			detectRoomZone({type: 'deleteFloors'});
+			detectRoomZone({type: 'crLevelFloor'});			
+		}
 		
 		render();
 	}
@@ -1336,7 +1354,9 @@ function detectRoomZone(params)
 		
 	
 	if(type == 'crLevelFloor') { crLevelFloor(); }
-	if(type == 'upGeomFloor') { upGeomFloor({point: params.point}); }
+	if(type == 'changeFormFloor') { changeFormFloor({point: params.point}); }
+	if(type == 'deleteFloors') { deleteFloors(); }
+	
 	
 	function crLevelFloor()
 	{
@@ -1473,12 +1493,13 @@ function detectRoomZone(params)
 		let arrP = params.arrP;
 		let arrFC = params.arrFC;
 		let exsist = false;
-		
+
+				
 		for( let i = 0; i < arrFC.length; i++ )
 		{
 			let arr = arrFC[i].userData.flrr.arrP;
 			
-			if(arr.length !== arr.length) continue;
+			if(arr.length !== arrP.length) continue;
 			
 			let count = 0;
 			
@@ -1499,8 +1520,6 @@ function detectRoomZone(params)
 				exsist = true; 
 				break; 
 			}
-			
-			console.log(i, count, arrP.length - 1);
 		}
 		
 		return exsist;
@@ -1556,7 +1575,7 @@ function detectRoomZone(params)
 
 
 
-	function upGeomFloor(params)
+	function changeFormFloor(params)
 	{
 		let point = params.point;
 		
@@ -1579,6 +1598,15 @@ function detectRoomZone(params)
 	}
 
 
+	function deleteFloors(params)
+	{
+		for( let i = arrFC.length - 1; i >= 0; i-- )
+		{
+			arrFC[i].geometry.dispose();
+			scene.remove( arrFC[i] );			
+			arrFC.pop();
+		}
+	}
 }
 
 
