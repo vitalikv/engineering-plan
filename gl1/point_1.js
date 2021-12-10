@@ -498,7 +498,7 @@ class Point_1
 				
 				if(e.button == 2)
 				{
-					this.deletePoint({obj: obj, buttonRight: true});
+					this.deletePoint({obj: obj});
 					
 					camOrbit.stopMove = false;
 				}
@@ -743,23 +743,23 @@ class Point_1
 			}			
 		}
 		
-		let w = null;
+		let w = {divide: false};
 		
 		if(!o)
 		{			
 			w = this.divideWall({obj: obj, tool: true});
 		}
 		
-		if(!o && !w)
+		if(!o && !w.divide)
 		{
 			this.level[this.actLevelId].pps.push(obj);
 			this.crPoint({pos: obj.position.clone(), cursor: true, tool: true, joinP: [obj]});							
 		}
 		
-		if(o || w)
+		if(o || w.divide)
 		{ 
-			detectRoomZone({type: 'deleteFloors'});
-			detectRoomZone({type: 'crLevelFloor'});			
+			if(o) { detectRoomZone({type: 'addCheckFloor', point: o}); }
+			else if(w.divide) { for( let i = 0; i < w.p.length; i++ ){ detectRoomZone({type: 'addCheckFloor', point: w.p[i]}); } }
 		}
 	}
 	
@@ -770,7 +770,7 @@ class Point_1
 		let obj = params.obj;
 		
 		let o = this.rayFromPointToObj({obj: obj, arr: this.getActLevelArrPoint()});  
-		let w2 = null;
+		let w2 = {divide: false};
 		
 		// точка состыковалась с точкой
 		if(o)
@@ -822,10 +822,10 @@ class Point_1
 			w2 = this.divideWall({obj: obj});
 		}
 		
-		if(o || w2)
+		if(o || w2.divide)
 		{
-			detectRoomZone({type: 'deleteFloors'});
-			detectRoomZone({type: 'crLevelFloor'});				
+			if(o) { detectRoomZone({type: 'addCheckFloor', point: o}); }
+			else if(w2.divide) { for( let i = 0; i < w2.p.length; i++ ){ detectRoomZone({type: 'addCheckFloor', point: w2.p[i]}); } }
 		}
 	}	
 	
@@ -968,13 +968,17 @@ class Point_1
 		
 
 		let wall = this.rayFromPointToObj({obj: obj, arr: arr});
-			
+		let result = {divide: false, p: []};
+		
 		if(wall)
 		{
 			let count = jW.length;
 			
 			let p = wall.userData.w.joinP;
-
+			
+			result.divide = true;
+			result.p = p;
+			
 			this.deleteValueFromArrya({arr: p[0].userData.point.joinP, obj: p[1]});
 			this.deleteValueFromArrya({arr: p[1].userData.point.joinP, obj: p[0]});
 			
@@ -984,6 +988,11 @@ class Point_1
 			wall.geometry.dispose();
 			scene.remove( wall );
 
+			for ( let i = 0; i < p.length; i++ )
+			{
+				detectRoomZone({type: 'deleteFloors', point: p[i]});
+			}
+			
 
 			for ( let i = 0; i < p.length; i++ )
 			{ 
@@ -1005,7 +1014,7 @@ class Point_1
 			}				
 		}
 
-		return wall;
+		return result;
 	}
 	
 
@@ -1070,11 +1079,15 @@ class Point_1
 		}
 		
 		if(!obj) return;
+				
 		
 		let p = obj.userData.point.joinP;
 		let w = obj.userData.point.joinW;
+						
 		
 		if(p.length > 2 && !reset) return;
+		
+		detectRoomZone({type: 'deleteFloors', point: obj});
 		
 		for( let i = 0; i < p.length; i++ )
 		{			
@@ -1116,11 +1129,11 @@ class Point_1
 			scene.remove( arr[i] );
 		}			
 		
-		if(!params.buttonRight)
+		if(!reset)
 		{
-			detectRoomZone({type: 'deleteFloors'});
-			detectRoomZone({type: 'crLevelFloor'});			
+			for( let i = 0; i < p.length; i++ ){ detectRoomZone({type: 'addCheckFloor', point: p[i]}); }
 		}
+		
 		
 		render();
 	}
@@ -1272,7 +1285,7 @@ class Point_1
 		}
 		
 		
-		detectRoomZone({type: 'crLevelFloor'});
+		detectRoomZone({type: 'createFloors'});
 		
 		this.settingLevel({type: 'addItemLevel', id: 0});
 		//let arrId = json.point.map(o => o.id);
@@ -1345,54 +1358,48 @@ function funcToFucn(name, params)
 
 
 
+class Floor_1
+{
+	constructor(params)
+	{
+		this.params = params;	
+		
+		this.arr = {};		
+	}
+	
+}
+
 
 let arrFC = [];
 // создаем пол 
-function detectRoomZone(params)
+function detectRoomZone(params = {})
 {
 	let type = params.type;
 		
 	
-	if(type == 'crLevelFloor') { crLevelFloor(); }
+	if(type == 'createFloors') { createFloors(); }
+	if(type == 'addCheckFloor') { addCheckFloor({point: params.point}); }
 	if(type == 'changeFormFloor') { changeFormFloor({point: params.point}); }
-	if(type == 'deleteFloors') { deleteFloors(); }
+	if(type == 'deleteFloors') { deleteFloors({point: params.point}); }
 	
 	
-	function crLevelFloor()
+
+	
+	function createFloors()
 	{
-		let level = pointClass_1.level[0];
+		let level = pointClass_1.level;
 		
-		let arrP = level.pps;
-		//let arrP = [level.pps[0]];
-		for( let i = 0; i < arrP.length; i++ )
-		{ 
-			let p1 = arrP[i];
-			let joinP = p1.userData.point.joinP;
-			
-			for( let i2 = 0; i2 < joinP.length; i2++ )
-			{
-				let p2 = joinP[i2];
-				
-				if(p2.userData.point.joinP.length < 2) continue;
-				
-				let arr = getContour({arr: [p1], point: p2});
-
-				if(arr.length == 0) continue;
-				if(arr[0] != arr[arr.length - 1]) continue;	
-				if(checkClockWise( arr ) <= 0) continue;
-				if(detectSameZone({arrP: arr, arrFC: arrFC})) continue;
-				
-				let obj = crFloor({arrP: arr});
-				
-				arrFC.push(obj);
-				
-				let arrP2_id = arr.map(o => o.userData.id);
-				console.log(arrP2_id);
-			}
-		}		
-	}
-
+		for( let i = 0; i < level.length; i++ )
+		{
+			for( let i2 = 0; i2 < level[i].pps.length; i2++ )
+			{ 
+				addCheckFloor({point: level[i].pps[i2]});
+			}		
+		}
+	}	
 	
+
+
 	// ищем замкнутый контур
 	function getContour(params)
 	{
@@ -1497,7 +1504,7 @@ function detectRoomZone(params)
 				
 		for( let i = 0; i < arrFC.length; i++ )
 		{
-			let arr = arrFC[i].userData.flrr.arrP;
+			let arr = arrFC[i].userData.floor.arrP;
 			
 			if(arr.length !== arrP.length) continue;
 			
@@ -1524,6 +1531,37 @@ function detectRoomZone(params)
 		
 		return exsist;
 	}
+	
+
+
+	function addCheckFloor(params)
+	{
+		let p1 = params.point;
+
+		let joinP = p1.userData.point.joinP;
+		
+		for( let i2 = 0; i2 < joinP.length; i2++ )
+		{
+			let p2 = joinP[i2];
+			
+			if(p2.userData.point.joinP.length < 2) continue;
+			
+			let arr = getContour({arr: [p1], point: p2});
+
+			if(arr.length == 0) continue;
+			if(arr[0] != arr[arr.length - 1]) continue;	
+			if(checkClockWise( arr ) <= 0) continue;
+			if(detectSameZone({arrP: arr, arrFC: arrFC})) continue;
+			
+			let obj = crFloor({arrP: arr});
+			
+			arrFC.push(obj);
+			
+			let arrP2_id = arr.map(o => o.userData.id);
+			console.log(arrP2_id);
+		}
+		
+	}
 
 
 
@@ -1537,13 +1575,14 @@ function detectRoomZone(params)
 
 		//if(id == undefined) { id = this.countId.w; this.countId.w++; }	
 		//obj.userData.id = id;
-		obj.userData.tag = 'flrr';	
-		obj.userData.flrr = {};
-		
-		obj.userData.flrr.arrP = params.arrP;				
+		obj.userData.tag = 'floor';	
+		obj.userData.floor = {};		
+		obj.userData.floor.arrP = params.arrP;				
 		//obj.userData.active = false;		
 
 		updateGeomFloor({obj: obj});
+		
+		if(params.arrP[0]) obj.position.y = params.arrP[0].position.y;
 		
 		scene.add( obj );		
 		
@@ -1558,7 +1597,7 @@ function detectRoomZone(params)
 		let obj = params.obj;
 		obj.geometry.dispose();
 		
-		let arrP = obj.userData.flrr.arrP;
+		let arrP = obj.userData.floor.arrP;
 		let arr = [];
 		
 		for( let i = 0; i < arrP.length - 1; i++ ) 
@@ -1579,34 +1618,60 @@ function detectRoomZone(params)
 	{
 		let point = params.point;
 		
+		let arr = findFloors({point: point});
+		
+		for( let i = 0; i < arr.length; i++ )
+		{
+			updateGeomFloor({obj: arr[i]});
+		}
+		
+		render();
+	}
+	
+
+	function findFloors(params)
+	{
+		let point = params.point;
+		
+		let arr = [];
+		
 		for( let i = 0; i < arrFC.length; i++ )
 		{
-			let arrP = arrFC[i].userData.flrr.arrP;
+			let arrP = arrFC[i].userData.floor.arrP;
 			
 			let ind = arrP.findIndex(o => o == point);
 			
 			if(ind > -1)
 			{
-				updateGeomFloor({obj: arrFC[i]});
+				arr.push(arrFC[i]);
 				
 				let arrP2_id = arrP.map(o => o.userData.id);
-				console.log(arrP2_id);
+				console.log(arrP2_id);				
 			}
 		}
 		
-		render();
-	}
-
+		return arr;
+	}	
+	
 
 	function deleteFloors(params)
-	{
-		for( let i = arrFC.length - 1; i >= 0; i-- )
+	{ 
+		let point = params.point;
+		
+		let arr = findFloors({point: point});
+		
+		for( let i = 0; i < arr.length; i++ )
 		{
-			arrFC[i].geometry.dispose();
-			scene.remove( arrFC[i] );			
-			arrFC.pop();
+			arr[i].geometry.dispose();
+			scene.remove( arr[i] );	
+			
+			pointClass_1.deleteValueFromArrya({arr: arrFC, obj: arr[i]});
 		}
+		
+		console.log('arrFC', arrFC.length);
 	}
+	
+	
 }
 
 
