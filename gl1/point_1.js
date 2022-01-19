@@ -775,7 +775,7 @@ class Point_1
 		// точка состыковалась с точкой
 		if(o)
 		{
-			
+			detectRoomZone({type: 'deleteFloors', point: obj});
 			let p = obj.userData.point.joinP;
 			let w = obj.userData.point.joinW;
 			
